@@ -16,6 +16,8 @@ test("native networking, message cache, uploads, and cancellation", async ({
       "native-discovery",
       "native-websocket",
       "native-fetch",
+      "coalesced-get-isolation",
+      "coalesced-blob-responses",
       "bigint-permissions",
       "message-create-update-delete",
       "immutable-snapshots",

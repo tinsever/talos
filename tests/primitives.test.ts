@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { LRUCache, MemoryRateLimitStore, discover, FluxerAPIError } from "../src/index.js";
 import { TypedEmitter } from "../src/events.js";
 import { Semaphore } from "../src/scheduler.js";
-import { snapshot } from "../src/snapshot.js";
+import { adoptSnapshot, snapshot } from "../src/snapshot.js";
 import { abortable, deadline, delay, positive } from "../src/utils.js";
 import { json } from "./helpers.js";
 
@@ -261,6 +261,28 @@ describe("shared rate limits", () => {
 });
 
 describe("immutable snapshots", () => {
+  it("adopts parsed JSON in place and freezes every nested object and array", () => {
+    const parsed = JSON.parse('{"list":[null,1,"text",true,[{"value":2}]],"__proto__":{"nested":{"value":3}}}');
+    expect(adoptSnapshot(parsed)).toBe(parsed);
+    expect(snapshot(parsed)).toBe(parsed);
+    for (const value of [parsed, parsed.list, parsed.list[4], parsed.list[4][0], parsed.__proto__, parsed.__proto__.nested])
+      expect(Object.isFrozen(value)).toBe(true);
+    expect(() => { parsed.list[4][0].value = 4; }).toThrow(TypeError);
+    expect(() => { parsed.__proto__.nested.value = 4; }).toThrow(TypeError);
+    expect(Object.getPrototypeOf(parsed)).toBe(Object.prototype);
+    for (const value of [null, undefined, false, 0, "text"])
+      expect(adoptSnapshot(value)).toBe(value);
+  });
+
+  it("does not freeze inherited properties while adopting JSON fields", () => {
+    const inherited = { value: 1 };
+    const parsed = JSON.parse('{"nested":{"value":2}}');
+    Object.setPrototypeOf(parsed, { inherited });
+    adoptSnapshot(parsed);
+    expect(Object.isFrozen(parsed.nested)).toBe(true);
+    expect(Object.isFrozen(inherited)).toBe(false);
+  });
+
   it("preserves aliases, sparse arrays, undefined, and literal __proto__ keys", () => {
     const shared = { value: 1 };
     const list = new Array(3);

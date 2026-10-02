@@ -22,6 +22,7 @@ const files = [
   "collectors",
   "supervisor",
   "node",
+  "node-http",
 ];
 const config = ts.readConfigFile("tsconfig.json", ts.sys.readFile),
   parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, ".");

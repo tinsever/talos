@@ -20,12 +20,17 @@ export class Semaphore {
   get stats(): { active: number; queued: number } {
     return { active: this.active, queued: this.queue.size };
   }
+  /** Internal synchronous path; queued callers still acquire in FIFO order. */
+  tryAcquire(signal: AbortSignal): (() => void) | undefined {
+    signal.throwIfAborted();
+    if (this.active >= this.capacity || this.queue.size > 0) return undefined;
+    this.active++;
+    return this.release();
+  }
   acquire(signal: AbortSignal): Promise<() => void> {
     if (signal.aborted) return Promise.reject(abortReason(signal));
-    if (this.active < this.capacity && this.queue.size === 0) {
-      this.active++;
-      return Promise.resolve(this.release());
-    }
+    const release = this.tryAcquire(signal);
+    if (release) return Promise.resolve(release);
     return new Promise((resolve, reject) => {
       const id = this.sequence++;
       const abort = () => {

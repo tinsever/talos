@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { WebSocketServer, WebSocket } from "ws";
 import { GatewayClient, RESTClient } from "../dist/index.js";
+import { nodeHTTPTransport } from "../dist/node.js";
 const durationMs = Number(process.env.TALOS_SOAK_MS ?? 60000);
 if (!Number.isFinite(durationMs) || durationMs < 1000)
   throw new Error("TALOS_SOAK_MS must be at least 1000");
@@ -67,6 +68,8 @@ ws.on("connection", (socket) => {
 });
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const port = server.address().port;
+const transport = process.env.TALOS_SOAK_NODE_HTTP === "1"
+  ? nodeHTTPTransport({ maxConnections: 4 }) : undefined;
 const gateway = new GatewayClient({
     url: `ws://127.0.0.1:${port}`,
     token: "synthetic",
@@ -78,6 +81,7 @@ const gateway = new GatewayClient({
   rest = new RESTClient({
     api: `http://127.0.0.1:${port}`,
     token: "synthetic",
+    ...(transport ? { fetch: transport.fetch } : {}),
     maxConcurrentRequests: 4,
     maxPendingRequests: 50,
   });
@@ -126,11 +130,13 @@ try {
   while (uniqueReceived < generated && Date.now() < drainDeadline)
     await new Promise((resolve) => setTimeout(resolve, 10));
   gateway.disconnect();
+  transport?.close();
   for (const socket of ws.clients) socket.terminate();
   await new Promise((resolve) => ws.close(resolve));
   await new Promise((resolve) => server.close(resolve));
 }
 const result = {
+  nodeHTTPPools: transport !== undefined,
   durationMs: Date.now() - started,
   requestsDone,
   httpRequests,

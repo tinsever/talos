@@ -3,6 +3,8 @@ import type { MessagePort, TransferListItem } from "node:worker_threads";
 import type { SupervisedWorker } from "./supervisor.js";
 import type { RateLimitStore } from "./rate-limits.js";
 import { abortReason } from "./utils.js";
+export { nodeHTTPTransport } from "./node-http.js";
+export type { NodeHTTPTransport, NodeHTTPTransportOptions } from "./node-http.js";
 /** Workers signal startup using parentPort.postMessage({type:'talos:ready'}). */
 export function nodeWorkerFactory(
   module: URL,

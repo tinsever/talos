@@ -10,3 +10,7 @@ website/.docusaurus/
 website/build/
 playwright-report/
 test-results/
+benchmark/
+benchmarks/
+benchmark-results/
+.benchmarks/

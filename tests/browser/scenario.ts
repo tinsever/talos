@@ -1,5 +1,5 @@
 import { runVoiceBrowserTests } from "./voice-scenario.js";
-import { Client, PermissionFlags, Permissions } from "../../src/index.js";
+import { Client, RESTClient, PermissionFlags, Permissions } from "../../src/index.js";
 
 interface Status {
   sockets: number;
@@ -47,6 +47,25 @@ export async function runBrowserTests() {
       "REST response mismatch",
     );
     checks.push("native-fetch");
+    const sharedUsers = await Promise.all([
+      client.rest.request("GET", "/users/@me", { coalesce: true }),
+      client.rest.request("GET", "/users/@me", { coalesce: true }),
+    ]);
+    assert(sharedUsers[0]!.id === "1" && sharedUsers[1]!.id === "1", "Shared GET response mismatch");
+    assert(sharedUsers[0] !== sharedUsers[1], "Shared GET leaked one mutable response");
+    const username = sharedUsers[1]!.username;
+    sharedUsers[0]!.username = "changed";
+    assert(sharedUsers[1]!.username === username, "Shared GET mutation crossed callers");
+    let binaryCalls = 0;
+    const binary = new RESTClient({ api: location.origin, token: "browser-test-token", coalesceGets: true,
+      fetch: async () => { binaryCalls++; return new Response(new Blob(["binary"])); },
+    });
+    const blobs = await Promise.all([
+      binary.request("GET", "/users/@me"), binary.request("GET", "/users/@me"),
+    ]) as unknown as Blob[];
+    assert(binaryCalls === 1 && blobs[0] !== blobs[1], "Binary GET was not shared independently");
+    assert(await blobs[0]!.text() === "binary" && await blobs[1]!.text() === "binary", "Binary GET clone failed");
+    checks.push("coalesced-get-isolation", "coalesced-blob-responses");
     assert(
       new Permissions(PermissionFlags.VIEW_CHANNEL).has(
         PermissionFlags.VIEW_CHANNEL,

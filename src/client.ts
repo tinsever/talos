@@ -1,4 +1,4 @@
-import { adoptSnapshot, snapshot } from "./snapshot.js";
+import { deferSnapshot, snapshot } from "./snapshot.js";
 import { collect } from "./collectors.js";
 import type { CollectorOptions } from "./collectors.js";
 import { LRUCache } from "./cache.js";
@@ -16,6 +16,10 @@ import { RESTClient } from "./rest.js";
 import type { RESTOptions } from "./rest.js";
 import type { MessageData, User } from "./types.js";
 import { abortReason, positive } from "./utils.js";
+
+const nativeApply = Resources.prototype.apply;
+const nativeWrap = Messages.prototype.wrap;
+const nativeEmit = TypedEmitter.prototype.emit;
 
 export interface ClientEvents extends GatewayEvents {
   messageCreate: Message;
@@ -205,7 +209,7 @@ export class Client extends TypedEmitter<ClientEvents> {
       gateway.on("dispatch", (dispatch) => {
         if (this.gatewayClient !== gateway || !this.active) return;
         const resources = this.resources;
-        const ownsResources = resources.apply === Resources.prototype.apply;
+        const ownsResources = resources.apply === nativeApply;
         if (dispatch.t !== "READY")
           resources.apply(dispatch as KnownDispatch);
         // JSON.parse owns this payload. Without raw observers or a processing
@@ -215,16 +219,20 @@ export class Client extends TypedEmitter<ClientEvents> {
           !this.options.gateway?.processDispatch &&
           listenerCount(this, "dispatch") === 0 &&
           listenerCount(gateway, "dispatch") === 1 &&
-          this.emit === TypedEmitter.prototype.emit &&
-          gateway.emit === TypedEmitter.prototype.emit;
+          this.emit === nativeEmit &&
+          gateway.emit === nativeEmit;
         this.emit("dispatch", dispatch);
         if (this.gatewayClient !== gateway || !this.active) return;
         if (dispatch.t === "MESSAGE_CREATE") {
           const data = dispatch.d as MessageData;
           const messages = this.messages;
+          if (this.cache.maxSize === 0 &&
+              listenerCount(this, "messageCreate") === 0 &&
+              this.emit === nativeEmit &&
+              messages.wrap === nativeWrap) return;
           const message = messages.wrap(
-            ownsMessage && messages.wrap === Messages.prototype.wrap
-              ? adoptSnapshot(data)
+            ownsMessage && messages.wrap === nativeWrap
+              ? deferSnapshot(data)
               : data,
           );
           if (this.cache.maxSize > 0)

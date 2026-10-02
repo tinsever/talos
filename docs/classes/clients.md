@@ -46,7 +46,7 @@ required only for authenticated requests. It works without a gateway connection.
 
 Options include `origin`, `authScheme`, `fetch`, `locale`, `timeoutMs`,
 `maxRetries`, `maxBuckets`, `rateLimitStore`, `maxConcurrentRequests`,
-`maxPendingRequests`, and `onDiagnostic`. See [RESTOptions](../../src/rest.ts)
+`maxPendingRequests`, `coalesceGets`, and `onDiagnostic`. See [RESTOptions](../../src/rest.ts)
 and the [defaults and retry policy](../rest.md).
 
 | Member | Result and behaviour |
@@ -56,7 +56,8 @@ and the [defaults and retry policy](../rest.md).
 | `updateToken(token)` | `void`; changes the credential for subsequent requests. |
 
 `request` options also accept `headers`, `auth`, `signal`, `timeoutMs`, and
-`reason`. Authentication defaults to the `Bot` scheme. The endpoint's path prefix
+`reason`, plus `coalesce` to override opt-in sharing of overlapping GETs.
+Authentication defaults to the `Bot` scheme. The endpoint's path prefix
 is preserved, and Talos handles `/v1`.
 
 Requests count against pending capacity while queued, rate-limited, or active.

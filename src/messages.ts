@@ -1,4 +1,4 @@
-import { snapshot } from "./snapshot.js";
+import { adoptSnapshot, snapshot, takeDeferredSnapshot } from "./snapshot.js";
 import type { RESTClient } from "./rest.js";
 import type {
   MessageCreate,
@@ -50,27 +50,45 @@ export interface PinnedMessagesPage {
 }
 
 export class Message {
-  readonly data: MessageData;
+  declare readonly data: MessageData;
+  #raw: MessageData;
+  private static readonly readData = function (this: Message): MessageData {
+    return adoptSnapshot(this.#raw);
+  };
+  private static readonly dataProperty = {
+    enumerable: true,
+    configurable: true,
+    get: Message.readData,
+  };
   constructor(
     data: MessageData,
     private readonly messages: Messages,
   ) {
-    this.data = snapshot(data);
+    if (takeDeferredSnapshot(data)) {
+      // Primitive getters cannot expose mutable JSON. Freeze the full tree only
+      // when data is requested, before returning any object to user code.
+      this.#raw = data;
+      Object.defineProperty(this, "data", Message.dataProperty);
+    } else {
+      this.#raw = this.data = snapshot(data);
+    }
   }
   get id(): string {
-    return this.data.id;
+    return this.#raw.id;
   }
   get channelId(): string {
-    return this.data.channel_id;
+    return this.#raw.channel_id;
   }
   get guildId(): string | null {
-    return this.data.guild_id ?? null;
+    return this.#raw.guild_id ?? null;
   }
   get content(): string {
-    return this.data.content;
+    return this.#raw.content;
   }
   get author(): MessageData["author"] {
-    return this.data.author;
+    // Checking author.bot need not walk unrelated embeds and attachments.
+    const author = this.#raw.author;
+    return Object.isFrozen(author) ? author : adoptSnapshot(author);
   }
   reply(input: MessageInput, options?: SendOptions): Promise<Message> {
     const body: MessageCreate =

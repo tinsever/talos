@@ -10,6 +10,59 @@ afterEach(() => {
 });
 
 describe("REST transport", () => {
+  it.each(["reserve", "fetch", "observe", "body", "penalize"] as const)(
+    "releases capacity on cancellation during an ignored %s and suppresses late side effects",
+    async (phase) => {
+      let started = false;
+      let finish!: (value: never) => void;
+      const held = new Promise<never>(resolve => { finish = resolve; });
+      const stall = () => { started = true; return held; };
+      const response = phase === "penalize"
+        ? json({ retry_after: 1, global: true }, 429)
+        : json({});
+      if (phase === "body") response.json = vi.fn(stall);
+      const reserve = vi.fn().mockResolvedValue(undefined);
+      const observe = vi.fn().mockReturnValue(undefined);
+      const penalize = vi.fn().mockReturnValue(undefined);
+      if (phase === "reserve") reserve.mockImplementationOnce(stall);
+      if (phase === "observe") observe.mockImplementationOnce(stall);
+      if (phase === "penalize") penalize.mockImplementationOnce(stall);
+      const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(json({}));
+      if (phase === "fetch") fetch.mockImplementationOnce(stall);
+      else fetch.mockResolvedValueOnce(response);
+      const diagnostic = vi.fn();
+      const rest = new RESTClient({ api, token: "s", fetch, maxConcurrentRequests: 1,
+        onDiagnostic: diagnostic, rateLimitStore: { reserve, observe, penalize, canPipeline: () => true },
+      });
+      const controller = new AbortController();
+      const first = rest.request("GET", "/users/@me", { signal: controller.signal });
+      const rejected = expect(first).rejects.toBe("stop");
+      await vi.waitFor(() => expect(started).toBe(true));
+      controller.abort("stop");
+      await rejected;
+      expect(rest.stats).toEqual({ active: 0, pending: 0, waiting: 0 });
+      await rest.request("GET", "/users/@me");
+      const counts = [fetch.mock.calls.length, observe.mock.calls.length, diagnostic.mock.calls.length];
+      finish((phase === "fetch" ? json({}) : phase === "body" ? {} : undefined) as never);
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect([fetch.mock.calls.length, observe.mock.calls.length, diagnostic.mock.calls.length]).toEqual(counts);
+      expect(rest.stats).toEqual({ active: 0, pending: 0, waiting: 0 });
+    },
+  );
+
+  it("does not send or leak a slot when cancelled during immediate acquisition", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(json({}));
+    const rest = new RESTClient({ api, token: "s", fetch, maxConcurrentRequests: 1 });
+    const controller = new AbortController();
+    const pending = rest.request("GET", "/users/@me", { signal: controller.signal });
+    controller.abort("early");
+    await expect(pending).rejects.toBe("early");
+    expect(fetch).not.toHaveBeenCalled();
+    expect(rest.stats.active).toBe(0);
+    await rest.request("GET", "/users/@me");
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
   it("records an asynchronous 429 penalty before admitting queued requests", async () => {
     vi.useFakeTimers();
     let recorded = false;

@@ -56,6 +56,43 @@ overrides. `auth: false` omits the token; `auth: true` requires one. A custom
 `Authorization` header is removed, so configure authentication through the client.
 Authenticated requests do not follow redirects.
 
+## Optional Node HTTP pools
+
+Node applications can inject a transport built on `node:http` and `node:https`
+for JSON API calls. It adds no dependencies and keeps Talos's request deadlines,
+rate limits, retry policy, and write ordering:
+
+```ts
+import { RESTClient } from "talos-fluxer";
+import { nodeHTTPTransport } from "talos-fluxer/node";
+
+const transport = nodeHTTPTransport({ maxConnections: 10 });
+const rest = new RESTClient({
+  api: instance.endpoints.api_public,
+  token,
+  fetch: transport.fetch,
+  maxConcurrentRequests: 10,
+  coalesceGets: true,
+});
+try {
+  const user = await rest.request("GET", "/users/@me");
+  console.log(user.username);
+} finally {
+  transport.close();
+}
+```
+
+`maxConnections` bounds pooled sockets per origin, including idle sockets; the
+REST concurrency setting also bounds active requests. Responses stream with
+byte-based backpressure and support gzip, deflate, and Brotli compression. HTTPS
+certificate verification remains enabled. Multipart bodies, `Request` objects,
+and operations that follow redirects use the runtime's native `fetch`.
+
+For a `Client`, pass `transport.fetch` as `rest.fetch` and disconnect before
+closing the transport. `close()` cancels pooled work and closes its sockets;
+finish native-fetch multipart and discovery work before closing. The default
+transport continues to be the runtime's native `fetch`.
+
 ## Deadlines and queue capacity
 
 | Option | Default | What it controls |
@@ -82,6 +119,37 @@ request rejects with `RequestQueueFullError` rather than waiting in another queu
 Concurrent reads can complete out of order. If a response supplies no rate-limit
 headers, the in-memory store permits bounded concurrency and learns limits from
 HTTP 429 responses. Missing headers do not prove that the server has no limit.
+
+## Share concurrent GET requests
+
+Enable `coalesceGets` when multiple parts of a bot request the same data at once:
+
+```ts
+const rest = new RESTClient({ api, token, coalesceGets: true });
+const [first, second] = await Promise.all([
+  rest.request("GET", "/users/@me"),
+  rest.request("GET", "/users/@me"),
+]);
+```
+
+These overlapping calls use one transport operation and one retry budget. Each
+caller receives its own cloned response, so changing `first` cannot change
+`second`. Sharing reduces HTTP requests and repeated response parsing; cloning
+still has a CPU and memory cost proportional to the response size.
+
+Sharing is disabled by default. Per-request `coalesce: true` enables it for one
+GET; `coalesce: false` overrides a client's `coalesceGets` setting. Only GETs
+without request bodies can share. Matching requires the same route, full URL
+(including query order), and effective headers, including authentication. Sharing
+is scoped to one `RESTClient`; token changes and different headers keep requests
+separate. Use it for reads where one result can satisfy overlapping callers.
+
+Completed results are never cached by this feature. A later request starts fresh.
+Each caller keeps its own deadline and cancellation signal, including while
+queued. Cancelling or timing out one caller leaves the others running; when the
+last caller leaves, Talos aborts the transport. Every caller counts against
+`maxPendingRequests`, while concurrency slots and diagnostics describe transport
+operations. Writes retain their existing ordering and are never shared.
 
 ## Retries
 

@@ -33,9 +33,11 @@ Replies default to `allowed_mentions: { parse: [], replied_user: false }`, so th
 do not ping the original author. Pass your own `allowed_mentions` in the message
 body to change that behaviour. Plain `send()` does not set this default.
 
-Message objects hold frozen snapshots. `edit()` returns a new `Message`; an older
-object still contains the original content. The raw payload is available as
-`message.data`.
+Message objects expose deeply frozen snapshots. Content and ID getters avoid
+walking unrelated payload fields; `author` freezes the author before returning
+it, and `data` freezes the full payload before returning it. `edit()` returns a
+new `Message`; an older object still contains the original content. Raw dispatch
+observers retain mutable payloads and receive separate message snapshots.
 
 ## Attach files
 

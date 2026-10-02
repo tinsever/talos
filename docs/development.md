@@ -122,9 +122,8 @@ bun run bench:bun
 
 The first command measures under Node; the second under Bun. These benchmarks
 measure SDK processing and local HTTP latency. They do not measure Fluxer service
-latency. The checked-in [Node](../benchmarks/node.json) and
-[Bun](../benchmarks/bun.json) results are reference measurements; compare runs on
-the same machine and runtime before drawing conclusions about a change.
+latency. Keep results locally in the ignored `benchmarks/` folder and compare
+runs on the same machine and runtime before drawing conclusions about a change.
 
 ## Package checks
 

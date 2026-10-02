@@ -397,7 +397,7 @@
     "name": "Message",
     "kind": "class",
     "members": [
-      "readonly data: MessageData;",
+      "declare readonly data: MessageData;",
       "constructor(\n    data: MessageData,\n    private readonly messages: Messages,\n  )",
       "get id(): string",
       "get channelId(): string",
@@ -458,6 +458,24 @@
     "declaration": "export interface SendOptions extends OperationOptions {\n  files?: readonly FileAttachment[];\n}"
   },
   {
+    "module": "node-http",
+    "name": "nodeHTTPTransport",
+    "kind": "value",
+    "type": "(options?: NodeHTTPTransportOptions) => NodeHTTPTransport"
+  },
+  {
+    "module": "node-http",
+    "name": "NodeHTTPTransport",
+    "kind": "type",
+    "declaration": "export interface NodeHTTPTransport {\n  /** Inject into RESTOptions.fetch; JSON API requests use bounded HTTP/HTTPS pools. */\n  fetch: typeof globalThis.fetch;\n  /** Cancel pooled work and close its sockets. Call after disconnecting clients. */\n  close(): void;\n}"
+  },
+  {
+    "module": "node-http",
+    "name": "NodeHTTPTransportOptions",
+    "kind": "type",
+    "declaration": "export interface NodeHTTPTransportOptions {\n  /** Maximum pooled sockets per origin. Defaults to 10. */\n  maxConnections?: number;\n}"
+  },
+  {
     "module": "node",
     "name": "IPCRateLimitStore",
     "kind": "class",
@@ -468,6 +486,24 @@
       "observe(key: string, headers: Headers): Promise<void>",
       "penalize(key: string, retryMs: number, global: boolean): Promise<void>"
     ]
+  },
+  {
+    "module": "node",
+    "name": "nodeHTTPTransport",
+    "kind": "value",
+    "type": "(options?: NodeHTTPTransportOptions) => NodeHTTPTransport"
+  },
+  {
+    "module": "node",
+    "name": "NodeHTTPTransport",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "node",
+    "name": "NodeHTTPTransportOptions",
+    "kind": "value",
+    "type": "any"
   },
   {
     "module": "node",
@@ -841,7 +877,7 @@
     "module": "rest",
     "name": "RESTOptions",
     "kind": "type",
-    "declaration": "export interface RESTOptions {\n  /** Advertised api_public endpoint, including any path prefix, without /v1. */\n  api: string;\n  /** Instance origin for the unversioned discovery operation. */\n  origin?: string;\n  token?: string;\n  authScheme?: \"Bot\" | \"Bearer\" | \"Session\" | \"Admin\";\n  fetch?: typeof globalThis.fetch;\n  locale?: string;\n  timeoutMs?: number;\n  maxRetries?: number;\n  maxBuckets?: number;\n  rateLimitStore?: RateLimitStore;\n  maxConcurrentRequests?: number;\n  /** Total accepted requests, including route queues, rate waits, and active work. */\n  maxPendingRequests?: number;\n  onDiagnostic?: (event: RESTDiagnostic) => void;\n}"
+    "declaration": "export interface RESTOptions {\n  /** Advertised api_public endpoint, including any path prefix, without /v1. */\n  api: string;\n  /** Instance origin for the unversioned discovery operation. */\n  origin?: string;\n  token?: string;\n  authScheme?: \"Bot\" | \"Bearer\" | \"Session\" | \"Admin\";\n  fetch?: typeof globalThis.fetch;\n  locale?: string;\n  timeoutMs?: number;\n  maxRetries?: number;\n  maxBuckets?: number;\n  rateLimitStore?: RateLimitStore;\n  maxConcurrentRequests?: number;\n  /** Share identical in-flight GETs within this client; each caller owns its response. */\n  coalesceGets?: boolean;\n  /** Total accepted requests, including route queues, rate waits, and active work. */\n  maxPendingRequests?: number;\n  onDiagnostic?: (event: RESTDiagnostic) => void;\n}"
   },
   {
     "module": "shards",
@@ -967,7 +1003,7 @@
     "module": "types",
     "name": "RequestOptions",
     "kind": "type",
-    "declaration": "export type RequestOptions<\n  M extends Method,\n  P extends PathsFor<M>,\n> = ParameterOption<Operation<M, P>, \"path\", \"params\"> &\n  ParameterOption<Operation<M, P>, \"query\", \"query\"> &\n  BodyOption<Operation<M, P>> &\n  OperationOptions & {\n    headers?: HeadersInit;\n    /** Overrides the schema's default authentication policy. */\n    auth?: boolean;\n  };"
+    "declaration": "export type RequestOptions<\n  M extends Method,\n  P extends PathsFor<M>,\n> = ParameterOption<Operation<M, P>, \"path\", \"params\"> &\n  ParameterOption<Operation<M, P>, \"query\", \"query\"> &\n  BodyOption<Operation<M, P>> &\n  OperationOptions & {\n    headers?: HeadersInit;\n    /** Overrides the schema's default authentication policy. */\n    auth?: boolean;\n    /** Override sharing of identical in-flight GETs; other methods are never shared. */\n    coalesce?: boolean;\n  };"
   },
   {
     "module": "types",

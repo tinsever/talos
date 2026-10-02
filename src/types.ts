@@ -65,6 +65,8 @@ export type RequestOptions<
     headers?: HeadersInit;
     /** Overrides the schema's default authentication policy. */
     auth?: boolean;
+    /** Override sharing of identical in-flight GETs; other methods are never shared. */
+    coalesce?: boolean;
   };
 export type RequestArgs<M extends Method, P extends PathsFor<M>> = [
   RequiredKeys<RequestOptions<M, P>>,

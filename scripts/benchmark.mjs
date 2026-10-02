@@ -27,8 +27,14 @@ const compiled = await build({
 });
 const sdk = await import(pathToFileURL(join(temporary, "sdk.mjs")).href);
 const { Client, GatewayClient, RESTClient, TypedEmitter, LRUCache, snapshot, Resources } = sdk;
+const nodeCompiled = await build({
+  entryPoints: [join(root, "src/node-http.ts")], bundle: true, format: "esm",
+  platform: "node", target: "es2022", absWorkingDir: root,
+  outfile: join(temporary, "node-http.mjs"), metafile: true,
+});
+const { nodeHTTPTransport } = await import(pathToFileURL(join(temporary, "node-http.mjs")).href);
 const sourceHash = createHash("sha256");
-for (const input of Object.keys(compiled.metafile.inputs).sort()) {
+for (const input of Object.keys({ ...compiled.metafile.inputs, ...nodeCompiled.metafile.inputs }).sort()) {
   if (input === "<stdin>") continue;
   sourceHash.update(input).update(await readFile(join(root, input)));
 }
@@ -189,6 +195,24 @@ try {
   add("client/rich message burst 1000 cache off", () => {
     for (let i = 0; i < 1000; i++) high.socket.receive(richFrame);
   }, 10, "1000-message burst");
+  const withAuthor = await connected(true);
+  withAuthor.client.on("messageCreate", (value) => { consumed += value.author.username.length + value.content.length; });
+  add("client/rich message burst 1000 read author", () => {
+    for (let i = 0; i < 1000; i++) withAuthor.socket.receive(richFrame);
+  }, 10, "1000-message burst");
+  const withData = await connected(true);
+  withData.client.on("messageCreate", (value) => {
+    const data = value.data;
+    assert(Object.isFrozen(data) && Object.isFrozen(data.embeds[0].fields[0]));
+    for (const embed of data.embeds) for (const field of embed.fields) consumed += field.value.length;
+  });
+  add("client/rich message burst 1000 read full data", () => {
+    for (let i = 0; i < 1000; i++) withData.socket.receive(richFrame);
+  }, 10, "1000-message burst");
+  const ignoredMessages = await connected(true);
+  add("client/rich message burst 1000 no consumer", () => {
+    for (let i = 0; i < 1000; i++) ignoredMessages.socket.receive(richFrame);
+  }, 10, "1000-message burst");
   if (experiments) {
     add("experiment/client small fast emitter", () => withPatch(TypedEmitter.prototype, "emit", fastEmit, () => high.socket.receive(messageFrame)));
     add("experiment/client rich fast emitter", () => withPatch(TypedEmitter.prototype, "emit", fastEmit, () => high.socket.receive(richFrame)), 500);
@@ -223,21 +247,43 @@ try {
   add("rest/injected POST + json", async () => { consumed += (await mockREST.request("POST", "/channels/{channel_id}/messages", { params: { channel_id: "10" }, body: { content: "Pong" } })).id.length; });
   add("rest/injected same-route burst 50", () => Promise.all(Array.from({ length: 50 }, () => mockREST.request("GET", "/users/@me"))), 30, "50-request burst");
 
+  let coalescedFetchCalls = 0, coalescedLogicalCalls = 0;
+  const coalescedREST = new RESTClient({ ...restOptions, coalesceGets: true, fetch: async () => {
+    coalescedFetchCalls++;
+    return syntheticFetch();
+  } });
+  add("rest/coalesced same-route burst 50", async () => {
+    coalescedLogicalCalls += 50;
+    const responses = await Promise.all(Array.from({ length: 50 }, () => coalescedREST.request("GET", "/users/@me")));
+    assert.equal(new Set(responses).size, 50);
+    for (const value of responses) consumed += value.id.length;
+  }, 30, "50-request burst");
+
   // Loopback measures real HTTP without external services, TLS, or rate limits.
   server = createServer((_req, res) => { res.writeHead(200, responseHeaders); res.end(responseBody); });
   await new Promise((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
   const api = `http://127.0.0.1:${server.address().port}`;
   const httpREST = new RESTClient({ api, token: "synthetic" });
+  const nodeTransport = nodeHTTPTransport();
+  cleanup.push(() => nodeTransport.close());
+  const nodeREST = new RESTClient({ api, token: "synthetic", fetch: nodeTransport.fetch });
   const headers = { Authorization: "Bot synthetic", "Accept-Language": "en-US" };
   add("http/direct fetch + json", async () => { consumed += (await (await fetch(`${api}/v1/users/@me`, { headers, credentials: "omit", redirect: "error" })).json()).id.length; }, 300);
   add("http/REST GET + json", async () => { consumed += (await httpREST.request("GET", "/users/@me")).id.length; }, 300);
   add("http/REST POST + json", async () => { consumed += (await httpREST.request("POST", "/channels/{channel_id}/messages", { params: { channel_id: "10" }, body: { content: "Pong" } })).id.length; }, 300);
+  add("http/node pools GET + json", async () => { consumed += (await nodeREST.request("GET", "/users/@me")).id.length; }, 300);
+  add("http/node pools POST + json", async () => { consumed += (await nodeREST.request("POST", "/channels/{channel_id}/messages", { params: { channel_id: "10" }, body: { content: "Pong" } })).id.length; }, 300);
   for (const method of ["GET", "POST"]) {
     for (const sameRoute of [true, false]) {
       add(`http/REST ${method} burst 50 ${sameRoute ? "same" : "different"} routes`, () => Promise.all(
         Array.from({ length: 50 }, (_, i) => method === "GET"
           ? httpREST.request("GET", "/users/{user_id}", { params: { user_id: sameRoute ? "1" : String(i) } })
           : httpREST.request("POST", "/channels/{channel_id}/messages", { params: { channel_id: sameRoute ? "10" : String(i) }, body: { content: "Pong" } })),
+      ), 10, "50-request burst");
+      add(`http/node pools ${method} burst 50 ${sameRoute ? "same" : "different"} routes`, () => Promise.all(
+        Array.from({ length: 50 }, (_, i) => method === "GET"
+          ? nodeREST.request("GET", "/users/{user_id}", { params: { user_id: sameRoute ? "1" : String(i) } })
+          : nodeREST.request("POST", "/channels/{channel_id}/messages", { params: { channel_id: sameRoute ? "10" : String(i) }, body: { content: "Pong" } })),
       ), 10, "50-request burst");
     }
   }
@@ -250,6 +296,16 @@ try {
   } });
   add("queue/50 same routes + 2ms fetch", () => Promise.all(Array.from({ length: 50 }, () => delayedREST.request("GET", "/users/{user_id}", { params: { user_id: "1" } }))), 10, "50-request burst");
   add("queue/50 different routes + 2ms fetch", () => Promise.all(Array.from({ length: 50 }, (_, i) => delayedREST.request("GET", "/users/{user_id}", { params: { user_id: String(i) } }))), 10, "50-request burst");
+  let sharedDelayedFetchCalls = 0, sharedDelayedLogicalCalls = 0;
+  const sharedDelayedREST = new RESTClient({ ...restOptions, coalesceGets: true, fetch: async () => {
+    sharedDelayedFetchCalls++;
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    return new Response(responseBody, { headers: responseHeaders });
+  } });
+  add("queue/50 coalesced same routes + 2ms fetch", () => {
+    sharedDelayedLogicalCalls += 50;
+    return Promise.all(Array.from({ length: 50 }, () => sharedDelayedREST.request("GET", "/users/{user_id}", { params: { user_id: "1" } })));
+  }, 10, "50-request burst");
 
   if (values.filter) {
     for (let i = cases.length - 1; i >= 0; i--) if (!cases[i].name.includes(values.filter)) cases.splice(i, 1);
@@ -274,7 +330,12 @@ try {
   }
   assert.equal(mockREST.stats.pending, 0);
   assert.equal(httpREST.stats.pending, 0);
+  assert.equal(nodeREST.stats.pending, 0);
   assert.equal(delayedREST.stats.pending, 0);
+  assert.equal(coalescedREST.stats.pending, 0);
+  assert.equal(sharedDelayedREST.stats.pending, 0);
+  assert.equal(coalescedLogicalCalls, coalescedFetchCalls * 50);
+  assert.equal(sharedDelayedLogicalCalls, sharedDelayedFetchCalls * 50);
   assert.equal(inFlight, 0);
   assert.deepEqual(errors, []);
   const percentile = (values, p) => values[Math.min(values.length - 1, Math.floor(values.length * p))];
@@ -286,7 +347,7 @@ try {
     rounds, sampleScale, experiments, filter: values.filter ?? null,
     fixtures: { smallMessageFrameBytes: Buffer.byteLength(messageFrame), richMessageFrameBytes: Buffer.byteLength(richFrame), guildResources: 1000, chunkMembers: 1000 },
     methodology: "Warm serial operations timed with performance.now(), including await and immediate promise reactions. Percentiles are individual operation durations; mean includes timing/harness overhead. Burst rows time entire bursts. Synthetic socket excludes transport. Loopback HTTP uses warm connections, no TLS/external API. Experiments use temporary in-process prototype replacements, never edit SDK source; patched client cases include patch overhead. No baseline subtraction.",
-    checks: { pending: 0, gatewayErrors: errors.length, delayedFetchCalls: calls, maxDelayedFetchConcurrency: peak, consumed },
+    checks: { pending: 0, gatewayErrors: errors.length, delayedFetchCalls: calls, maxDelayedFetchConcurrency: peak, coalescedFetchCalls, coalescedLogicalCalls, sharedDelayedFetchCalls, sharedDelayedLogicalCalls, consumed },
     results: cases.map((entry) => {
       entry.timings.sort((a, b) => a - b);
       const means = [...entry.roundMeans].sort((a, b) => a - b);
