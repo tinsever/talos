@@ -1,11 +1,11 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/branding/talos-logo-white.svg">
+  <img src="assets/branding/talos-logo.svg" alt="Talos" width="458" height="166">
+</picture>
+
 # Talos
 
 A portable, TypeScript-first Fluxer SDK.
-
-Voice support includes gateway signaling, LiveKit audio publishing and receiving,
-browser file playback, shared-key E2EE, and bounded automatic rejoining. Supply
-`livekit-client` or a custom media adapter separately. See the [voice support
-contract](VOICE.md) for runtime requirements, lifecycle guarantees, and examples.
 
 Run `bun run check` to validate generated contracts, the public API, types, tests,
 and the build.

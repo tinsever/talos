@@ -6,6 +6,7 @@
   "sideEffects": false,
   "license": "AGPL-3.0-only",
   "files": [
+    "assets/branding",
     "VOICE.md",
     "dist",
     "src",
