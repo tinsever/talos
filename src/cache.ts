@@ -17,14 +17,17 @@ export class LRUCache<K, V> {
     const entry = this.entries.get(key);
     if (!entry) return undefined;
     this.entries.delete(key);
-    if (entry.expires <= Date.now()) return undefined;
+    if (this.ttlMs !== Infinity && entry.expires <= Date.now()) return undefined;
     this.entries.set(key, entry);
     return entry.value;
   }
   set(key: K, value: V): this {
-    this.entries.delete(key);
     if (this.maxSize === 0) return this;
-    this.entries.set(key, { value, expires: Date.now() + this.ttlMs });
+    this.entries.delete(key);
+    this.entries.set(key, {
+      value,
+      expires: this.ttlMs === Infinity ? Infinity : Date.now() + this.ttlMs,
+    });
     while (this.entries.size > this.maxSize)
       this.entries.delete(this.entries.keys().next().value!);
     return this;
@@ -40,9 +43,11 @@ export class LRUCache<K, V> {
     this.entries.clear();
   }
   sweep(): number {
+    if (this.ttlMs === Infinity || this.entries.size === 0) return 0;
+    const now = Date.now();
     let removed = 0;
     for (const [key, entry] of this.entries)
-      if (entry.expires <= Date.now()) {
+      if (entry.expires <= now) {
         this.entries.delete(key);
         removed++;
       }

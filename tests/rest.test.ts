@@ -10,6 +10,112 @@ afterEach(() => {
 });
 
 describe("REST transport", () => {
+  it("records an asynchronous 429 penalty before admitting queued requests", async () => {
+    vi.useFakeTimers();
+    let recorded = false;
+    const fetch = vi.fn<typeof globalThis.fetch>()
+      .mockResolvedValueOnce(json({ retry_after: 1, global: true }, 429))
+      .mockImplementation(async () => {
+        expect(recorded).toBe(true);
+        return json({});
+      });
+    const rest = new RESTClient({ api, token: "s", fetch, maxRetries: 0,
+      maxConcurrentRequests: 1, rateLimitStore: {
+        canPipeline: () => true,
+        reserve: async () => {},
+        observe() {},
+        penalize: async () => {
+          await new Promise(resolve => setTimeout(resolve, 10));
+          recorded = true;
+        },
+      },
+    });
+    const rejected = expect(rest.request("GET", "/users/@me"))
+      .rejects.toMatchObject({ status: 429 });
+    const queued = rest.request("GET", "/users/@me");
+    const completed = Promise.all([rejected, queued]);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(10);
+    await completed;
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+  it("probes a new read route once, then overlaps reads within the concurrency bound", async () => {
+    vi.useFakeTimers();
+    let active = 0, peak = 0;
+    const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(async () => {
+      peak = Math.max(peak, ++active);
+      await new Promise(resolve => setTimeout(resolve, 10));
+      active--;
+      return json({});
+    });
+    const rest = new RESTClient({ api, token: "s", fetch, maxConcurrentRequests: 3 });
+    const requests = Array.from({ length: 7 }, () => rest.request("GET", "/users/@me"));
+    await vi.advanceTimersByTimeAsync(9);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(fetch).toHaveBeenCalledTimes(4);
+    expect(rest.stats.active).toBe(3);
+    await vi.advanceTimersByTimeAsync(20);
+    await Promise.all(requests);
+    expect(peak).toBe(3);
+    expect(rest.stats).toEqual({ pending: 0, active: 0, waiting: 0 });
+  });
+
+  it("preserves write ordering even after a route's rate limits are known", async () => {
+    vi.useFakeTimers();
+    const sent: string[] = [];
+    let active = 0, peak = 0;
+    const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(async (_url, init) => {
+      sent.push(JSON.parse(init!.body as string).content);
+      peak = Math.max(peak, ++active);
+      await new Promise(resolve => setTimeout(resolve, 10));
+      active--;
+      return json(message());
+    });
+    const rest = new RESTClient({ api, token: "s", fetch });
+    const requests = ["first", "second", "third"].map(content =>
+      rest.request("POST", route, { params, body: { content } }));
+    await vi.advanceTimersByTimeAsync(30);
+    await Promise.all(requests);
+    expect(sent).toEqual(["first", "second", "third"]);
+    expect(peak).toBe(1);
+  });
+
+  it("keeps custom stores sequential unless they advertise atomic pipelining", async () => {
+    vi.useFakeTimers();
+    const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(async () => {
+      await new Promise(resolve => setTimeout(resolve, 10));
+      return json({});
+    });
+    const rest = new RESTClient({ api, token: "s", fetch, rateLimitStore: {
+      reserve: async () => {}, observe() {}, penalize() {},
+    } });
+    const requests = Array.from({ length: 3 }, () => rest.request("GET", "/users/@me"));
+    await vi.advanceTimersByTimeAsync(10);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    await vi.advanceTimersByTimeAsync(20);
+    await Promise.all(requests);
+  });
+
+  it("frees a cancelled read's concurrency slot during a warmed burst", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>()
+      .mockResolvedValueOnce(json({}))
+      .mockImplementationOnce(() => new Promise(() => {}))
+      .mockImplementation(async () => json({}));
+    const rest = new RESTClient({ api, token: "s", fetch, maxConcurrentRequests: 1 });
+    await rest.request("GET", "/users/@me");
+    const controller = new AbortController();
+    const first = rest.request("GET", "/users/@me", { signal: controller.signal });
+    const cancelled = expect(first).rejects.toBe("stop");
+    const second = rest.request("GET", "/users/@me");
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    controller.abort("stop");
+    await cancelled;
+    await second;
+    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(rest.stats.pending).toBe(0);
+  });
   it("uses public API prefix, typed params, query, and bot auth", async () => {
     const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(json([]));
     await new RESTClient({ api, token: "secret", fetch }).request(

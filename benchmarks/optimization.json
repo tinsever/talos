@@ -1,0 +1,479 @@
+{
+  "baselineCommit": "cb37f10624a3f4dfc7140e82f9edf6ad9d7618f4",
+  "methodology": "Same extended scripts/benchmark.mjs against an isolated git baseline and local SDK sources on one machine. Warm, rotating case order; mean includes await and harness overhead. Core runs use 7 baseline and 9 optimized rounds; focused HTTP runs use 9 rounds each. Message bursts contain 1000 messages; HTTP bursts contain 50 requests. No external service, TLS, or competing SDK was measured. Timing differences near 1x are noise-sensitive.",
+  "changes": [
+    "Adopt unobserved parsed JSON as immutable message data; copy observed payloads.",
+    "Clone and freeze plain data together; reuse owned immutable snapshots.",
+    "Cache stable listener arrays and avoid promises for synchronous primitive results.",
+    "Skip hydration for disabled caches and use one clock read per TTL sweep.",
+    "Pipeline known read routes with atomic rate reservations; preserve write ordering."
+  ],
+  "validation": {
+    "nodeTestsPassed": 287,
+    "bunTestsPassed": 287,
+    "browserTestsPassed": 6,
+    "browserEngines": [
+      "Chromium",
+      "Firefox",
+      "WebKit"
+    ],
+    "typecheck": "passed",
+    "build": "passed",
+    "generatedContracts": "passed",
+    "publicAPI": "passed",
+    "smoke": "passed",
+    "bunLimitation": "Historical Bun 1.3.12 runs had three baseline WebSocket startup timeouts and could not pack lockfile v2. The required Bun 1.4.2 passes all 287 tests, full check, and packaging.",
+    "bunRuntime": "1.4.2",
+    "coverage": "passed",
+    "packageConsumer": "14 exports import in Node and Bun; external TypeScript consumer passes",
+    "nodeRuntimeMatrix": {
+      "20": "286 passed, 1 existing conditional skip",
+      "22": "287 passed",
+      "24": "287 passed"
+    }
+  },
+  "measurements": [
+    {
+      "group": "core",
+      "runtime": "Node v24.21.0",
+      "environment": {
+        "cpu": "Apple M4",
+        "logicalCPUs": 10,
+        "platform": "darwin",
+        "arch": "arm64"
+      },
+      "beforeMeasuredAt": "2026-10-02T15:19:27.902Z",
+      "afterMeasuredAt": "2026-10-02T15:53:02.392Z",
+      "beforeSourceSHA256": "7cc5d5be69c06d6f616519e946c3322994def533372e4f4dcf2a9b68e00dfed6",
+      "afterSourceSHA256": "77e90e0f177f261c295d2b1fbf879d4cebc093ad68e139df3d2ab7a267eda9e4",
+      "fixtures": {
+        "smallMessageFrameBytes": 360,
+        "richMessageFrameBytes": 7710,
+        "guildResources": 1000,
+        "chunkMembers": 1000
+      },
+      "results": [
+        {
+          "name": "emit/burst 1000 x 10 listeners",
+          "timedUnit": "1000-event burst",
+          "beforeMeanMs": 0.3071848857142894,
+          "afterMeanMs": 0.05173824222222341,
+          "beforeP50Ms": 0.25587500000074215,
+          "afterP50Ms": 0.0500000000001819,
+          "beforeThroughputPerSecond": 3255368.497947823,
+          "afterThroughputPerSecond": 19328062.89987302,
+          "speedup": 5.937288792976091
+        },
+        {
+          "name": "cache/size 10000 entries",
+          "timedUnit": "operation",
+          "beforeMeanMs": 0.254754028095239,
+          "afterMeanMs": 0.04100282333333308,
+          "beforeP50Ms": 0.25066700000024866,
+          "afterP50Ms": 0.033333999999968,
+          "beforeThroughputPerSecond": 3925.355008032113,
+          "afterThroughputPerSecond": 24388.56446226848,
+          "speedup": 6.213085036223292
+        },
+        {
+          "name": "client/small message burst 1000 cache off",
+          "timedUnit": "1000-message burst",
+          "beforeMeanMs": 2.7313018000000744,
+          "afterMeanMs": 1.3101652888888884,
+          "beforeP50Ms": 2.7364590000001954,
+          "afterP50Ms": 1.29950000000008,
+          "beforeThroughputPerSecond": 366125.7792895581,
+          "afterThroughputPerSecond": 763262.474193672,
+          "speedup": 2.084700169637687
+        },
+        {
+          "name": "client/rich message burst 1000 cache off",
+          "timedUnit": "1000-message burst",
+          "beforeMeanMs": 20.352805328571396,
+          "afterMeanMs": 9.390087977777785,
+          "beforeP50Ms": 20.142958999998882,
+          "afterP50Ms": 9.240958000000319,
+          "beforeThroughputPerSecond": 49133.27592222355,
+          "afterThroughputPerSecond": 106495.27484370337,
+          "speedup": 2.1674775973066014
+        },
+        {
+          "name": "client/guild cache off",
+          "timedUnit": "1000-resource event",
+          "beforeMeanMs": 0.8453691657142904,
+          "afterMeanMs": 0.15436175555555515,
+          "beforeP50Ms": 0.8357090000008611,
+          "afterP50Ms": 0.1511659999996482,
+          "beforeThroughputPerSecond": 1182.915157728819,
+          "afterThroughputPerSecond": 6478.288591633034,
+          "speedup": 5.476545421965223
+        },
+        {
+          "name": "queue/50 same routes + 2ms fetch",
+          "timedUnit": "50-request burst",
+          "beforeMeanMs": 118.63291547142855,
+          "afterMeanMs": 11.939289800000012,
+          "beforeP50Ms": 117.67312499999935,
+          "afterP50Ms": 12.021000000000186,
+          "beforeThroughputPerSecond": 421.46818866676136,
+          "afterThroughputPerSecond": 4187.85378674701,
+          "speedup": 9.936346085797199
+        }
+      ]
+    },
+    {
+      "group": "http",
+      "runtime": "Node v24.21.0",
+      "environment": {
+        "cpu": "Apple M4",
+        "logicalCPUs": 10,
+        "platform": "darwin",
+        "arch": "arm64"
+      },
+      "beforeMeasuredAt": "2026-10-02T15:35:39.679Z",
+      "afterMeasuredAt": "2026-10-02T15:53:40.281Z",
+      "beforeSourceSHA256": "7cc5d5be69c06d6f616519e946c3322994def533372e4f4dcf2a9b68e00dfed6",
+      "afterSourceSHA256": "77e90e0f177f261c295d2b1fbf879d4cebc093ad68e139df3d2ab7a267eda9e4",
+      "fixtures": {
+        "smallMessageFrameBytes": 360,
+        "richMessageFrameBytes": 7710,
+        "guildResources": 1000,
+        "chunkMembers": 1000
+      },
+      "results": [
+        {
+          "name": "http/direct fetch + json",
+          "timedUnit": "operation",
+          "beforeMeanMs": 0.05453831814814817,
+          "afterMeanMs": 0.05350837962962965,
+          "beforeP50Ms": 0.0442920000000413,
+          "afterP50Ms": 0.04554199999984121,
+          "beforeThroughputPerSecond": 18335.732269623622,
+          "afterThroughputPerSecond": 18688.661606307764,
+          "speedup": 1.0192481724478946
+        },
+        {
+          "name": "http/REST GET + json",
+          "timedUnit": "operation",
+          "beforeMeanMs": 0.056765371111111115,
+          "afterMeanMs": 0.0595691051851851,
+          "beforeP50Ms": 0.05062499999985448,
+          "afterP50Ms": 0.05016699999987395,
+          "beforeThroughputPerSecond": 17616.373863611763,
+          "afterThroughputPerSecond": 16787.225473527866,
+          "speedup": 0.9529330839307072
+        },
+        {
+          "name": "http/REST POST + json",
+          "timedUnit": "operation",
+          "beforeMeanMs": 0.06975399666666673,
+          "afterMeanMs": 0.06667956740740744,
+          "beforeP50Ms": 0.062250000000062755,
+          "afterP50Ms": 0.0625,
+          "beforeThroughputPerSecond": 14336.096106129915,
+          "afterThroughputPerSecond": 14997.097894922905,
+          "speedup": 1.046107516572127
+        },
+        {
+          "name": "http/REST GET burst 50 same routes",
+          "timedUnit": "50-request burst",
+          "beforeMeanMs": 2.8100823888888917,
+          "afterMeanMs": 2.2219592333333322,
+          "beforeP50Ms": 2.46875,
+          "afterP50Ms": 1.96287499999994,
+          "beforeThroughputPerSecond": 17793.0726151307,
+          "afterThroughputPerSecond": 22502.663077661935,
+          "speedup": 1.2646867443527623
+        },
+        {
+          "name": "http/REST GET burst 50 different routes",
+          "timedUnit": "50-request burst",
+          "beforeMeanMs": 2.365786555555558,
+          "afterMeanMs": 2.1997986222222163,
+          "beforeP50Ms": 2.0373329999999896,
+          "afterP50Ms": 1.9505000000001473,
+          "beforeThroughputPerSecond": 21134.62006223063,
+          "afterThroughputPerSecond": 22729.35326665968,
+          "speedup": 1.0754559674947255
+        },
+        {
+          "name": "http/REST POST burst 50 same routes",
+          "timedUnit": "50-request burst",
+          "beforeMeanMs": 4.406087955555556,
+          "afterMeanMs": 3.3727671111111106,
+          "beforeP50Ms": 3.1806250000000773,
+          "afterP50Ms": 3.089999999999918,
+          "beforeThroughputPerSecond": 11347.935062657094,
+          "afterThroughputPerSecond": 14824.622736411888,
+          "speedup": 1.3063718336911891
+        },
+        {
+          "name": "http/REST POST burst 50 different routes",
+          "timedUnit": "50-request burst",
+          "beforeMeanMs": 3.3064518555555593,
+          "afterMeanMs": 2.894706966666666,
+          "beforeP50Ms": 2.62179100000003,
+          "afterP50Ms": 2.546957999999904,
+          "beforeThroughputPerSecond": 15121.95010974955,
+          "afterThroughputPerSecond": 17272.90553958087,
+          "speedup": 1.1422406114436614
+        }
+      ]
+    },
+    {
+      "group": "core",
+      "runtime": "Bun 1.3.12",
+      "environment": {
+        "cpu": "Apple M4",
+        "logicalCPUs": 10,
+        "platform": "darwin",
+        "arch": "arm64"
+      },
+      "beforeMeasuredAt": "2026-10-02T15:19:45.251Z",
+      "afterMeasuredAt": "2026-10-02T15:35:54.925Z",
+      "beforeSourceSHA256": "7cc5d5be69c06d6f616519e946c3322994def533372e4f4dcf2a9b68e00dfed6",
+      "afterSourceSHA256": "e39c9761959af30173009f042f38f8bd52d6448c68fb4d63d42a7be7e30c4c8f",
+      "fixtures": {
+        "smallMessageFrameBytes": 360,
+        "richMessageFrameBytes": 7710,
+        "guildResources": 1000,
+        "chunkMembers": 1000
+      },
+      "results": [
+        {
+          "name": "emit/burst 1000 x 10 listeners",
+          "timedUnit": "1000-event burst",
+          "beforeMeanMs": 0.40813059428572157,
+          "afterMeanMs": 0.04189435333333272,
+          "beforeP50Ms": 0.3759590000008757,
+          "afterP50Ms": 0.03904199999988123,
+          "beforeThroughputPerSecond": 2450196.1234984654,
+          "afterThroughputPerSecond": 23869565.2381478,
+          "speedup": 9.741899845987062
+        },
+        {
+          "name": "cache/size 10000 entries",
+          "timedUnit": "operation",
+          "beforeMeanMs": 0.2516099409523812,
+          "afterMeanMs": 0.04841777814814817,
+          "beforeP50Ms": 0.24108300000079907,
+          "afterP50Ms": 0.04162499999983993,
+          "beforeThroughputPerSecond": 3974.40576558641,
+          "afterThroughputPerSecond": 20653.570614913624,
+          "speedup": 5.196643682874252
+        },
+        {
+          "name": "client/small message burst 1000 cache off",
+          "timedUnit": "1000-message burst",
+          "beforeMeanMs": 3.5877261857142844,
+          "afterMeanMs": 1.40798934444444,
+          "beforeP50Ms": 3.555500000000393,
+          "afterP50Ms": 1.3748749999999745,
+          "beforeThroughputPerSecond": 278728.07127306145,
+          "afterThroughputPerSecond": 710232.6476728962,
+          "speedup": 2.548120268005237
+        },
+        {
+          "name": "client/rich message burst 1000 cache off",
+          "timedUnit": "1000-message burst",
+          "beforeMeanMs": 28.323443442857204,
+          "afterMeanMs": 12.478423166666662,
+          "beforeP50Ms": 26.109542000000147,
+          "afterP50Ms": 12.178417000000081,
+          "beforeThroughputPerSecond": 35306.44153552547,
+          "afterThroughputPerSecond": 80138.3305120857,
+          "speedup": 2.269793471864057
+        },
+        {
+          "name": "client/guild cache off",
+          "timedUnit": "1000-resource event",
+          "beforeMeanMs": 0.6740888085714258,
+          "afterMeanMs": 0.16252981555555482,
+          "beforeP50Ms": 0.6080839999995078,
+          "afterP50Ms": 0.1545419999997648,
+          "beforeThroughputPerSecond": 1483.4840562317997,
+          "afterThroughputPerSecond": 6152.7172511814415,
+          "speedup": 4.147477841325756
+        },
+        {
+          "name": "queue/50 same routes + 2ms fetch",
+          "timedUnit": "50-request burst",
+          "beforeMeanMs": 122.59083931428572,
+          "afterMeanMs": 11.91990604444444,
+          "beforeP50Ms": 123.23450000000048,
+          "afterP50Ms": 11.80487499999981,
+          "beforeThroughputPerSecond": 407.8608179834316,
+          "afterThroughputPerSecond": 4194.663935568829,
+          "speedup": 10.284547450054955
+        }
+      ]
+    },
+    {
+      "group": "http",
+      "runtime": "Bun 1.3.12",
+      "environment": {
+        "cpu": "Apple M4",
+        "logicalCPUs": 10,
+        "platform": "darwin",
+        "arch": "arm64"
+      },
+      "beforeMeasuredAt": "2026-10-02T15:29:40.136Z",
+      "afterMeasuredAt": "2026-10-02T15:35:42.624Z",
+      "beforeSourceSHA256": "7cc5d5be69c06d6f616519e946c3322994def533372e4f4dcf2a9b68e00dfed6",
+      "afterSourceSHA256": "e39c9761959af30173009f042f38f8bd52d6448c68fb4d63d42a7be7e30c4c8f",
+      "fixtures": {
+        "smallMessageFrameBytes": 360,
+        "richMessageFrameBytes": 7710,
+        "guildResources": 1000,
+        "chunkMembers": 1000
+      },
+      "results": [
+        {
+          "name": "http/direct fetch + json",
+          "timedUnit": "operation",
+          "beforeMeanMs": 0.033429999999999946,
+          "afterMeanMs": 0.03827976814814814,
+          "beforeP50Ms": 0.031874999999899956,
+          "afterP50Ms": 0.03212499999995089,
+          "beforeThroughputPerSecond": 29913.251570445755,
+          "afterThroughputPerSecond": 26123.460208271325,
+          "speedup": 0.873307274762509
+        },
+        {
+          "name": "http/REST GET + json",
+          "timedUnit": "operation",
+          "beforeMeanMs": 0.04020637333333334,
+          "afterMeanMs": 0.0419305703703704,
+          "beforeP50Ms": 0.038250000000061846,
+          "afterP50Ms": 0.03633400000001075,
+          "beforeThroughputPerSecond": 24871.678718929466,
+          "afterThroughputPerSecond": 23848.948181888667,
+          "speedup": 0.9588797142083371
+        },
+        {
+          "name": "http/REST POST + json",
+          "timedUnit": "operation",
+          "beforeMeanMs": 0.04333033962962961,
+          "afterMeanMs": 0.04096270037037039,
+          "beforeP50Ms": 0.040792000000010376,
+          "afterP50Ms": 0.038833000000011,
+          "beforeThroughputPerSecond": 23078.51746715118,
+          "afterThroughputPerSecond": 24412.45305993868,
+          "speedup": 1.0577998822795336
+        },
+        {
+          "name": "http/REST GET burst 50 same routes",
+          "timedUnit": "50-request burst",
+          "beforeMeanMs": 1.9203249999999994,
+          "afterMeanMs": 0.9334129777777732,
+          "beforeP50Ms": 1.8952909999999292,
+          "afterP50Ms": 0.8569170000000099,
+          "beforeThroughputPerSecond": 26037.259318084187,
+          "afterThroughputPerSecond": 53566.857532919355,
+          "speedup": 2.0573155138380668
+        },
+        {
+          "name": "http/REST GET burst 50 different routes",
+          "timedUnit": "50-request burst",
+          "beforeMeanMs": 0.8919777777777781,
+          "afterMeanMs": 0.9487898333333337,
+          "beforeP50Ms": 0.8531249999999773,
+          "afterP50Ms": 0.8406670000000531,
+          "beforeThroughputPerSecond": 56055.20815167291,
+          "afterThroughputPerSecond": 52698.70970722527,
+          "speedup": 0.9401215595281405
+        },
+        {
+          "name": "http/REST POST burst 50 same routes",
+          "timedUnit": "50-request burst",
+          "beforeMeanMs": 2.0422777666666674,
+          "afterMeanMs": 2.1358046333333345,
+          "beforeP50Ms": 2.019166000000041,
+          "afterP50Ms": 2.0266249999999673,
+          "beforeThroughputPerSecond": 24482.467965955584,
+          "afterThroughputPerSecond": 23410.380902660265,
+          "speedup": 0.95621000853402
+        },
+        {
+          "name": "http/REST POST burst 50 different routes",
+          "timedUnit": "50-request burst",
+          "beforeMeanMs": 0.9901185111111089,
+          "afterMeanMs": 1.0179379555555554,
+          "beforeP50Ms": 0.9455840000000535,
+          "afterP50Ms": 0.9367079999999532,
+          "beforeThroughputPerSecond": 50499.00536036854,
+          "afterThroughputPerSecond": 49118.907225255905,
+          "speedup": 0.9726707857855014
+        }
+      ]
+    }
+  ],
+  "version": "0.2.0",
+  "safetyReview": {
+    "sourceSHA256": "77e90e0f177f261c295d2b1fbf879d4cebc093ad68e139df3d2ab7a267eda9e4",
+    "fixes": [
+      "Copy message payloads when a customized resource apply handler can retain raw transport data.",
+      "Await asynchronous 429 penalties before releasing the concurrency slot; preserve penalty failure semantics."
+    ],
+    "localFaultInjectionSoak": {
+      "durationMs": 60020,
+      "requestsDone": 40800,
+      "httpRequests": 42159,
+      "rateLimits": 1359,
+      "sessions": 1,
+      "resumes": 115,
+      "reconnects": 115,
+      "received": 2308,
+      "errors": 0,
+      "pending": 0,
+      "generated": 2308,
+      "uniqueReceived": 2308,
+      "duplicates": 0,
+      "eventDifference": 0,
+      "errorTypes": {},
+      "heapDeltaBytes": 2808656,
+      "rssDeltaBytes": 65388544,
+      "samples": 59
+    },
+    "limitations": [
+      "No live Fluxer API test performed.",
+      "No new head-to-head FluxerJS comparison performed.",
+      "A 60-second soak does not establish long-term memory stability."
+    ]
+  },
+  "originalComparison": {
+    "source": "User-provided table; original harness, runtime, machine and FluxerJS version were not provided. These values cannot be compared directly with the local measurements.",
+    "rows": [
+      {
+        "workload": "Small messages, default settings",
+        "talosPerSecond": 100022,
+        "fluxerJSPerSecond": 176833
+      },
+      {
+        "workload": "Rich messages, default settings",
+        "talosPerSecond": 16913,
+        "fluxerJSPerSecond": 43807
+      },
+      {
+        "workload": "HTTP GET, 50-request bursts",
+        "talosPerSecond": 2004,
+        "fluxerJSPerSecond": 3795
+      },
+      {
+        "workload": "HTTP POST, 50-request bursts",
+        "talosPerSecond": 1868,
+        "fluxerJSPerSecond": 3326
+      },
+      {
+        "workload": "Serial GET, median latency",
+        "talosMs": 0.505,
+        "fluxerJSMs": 0.492
+      },
+      {
+        "workload": "Serial POST, median latency",
+        "talosMs": 0.481,
+        "fluxerJSMs": 0.503
+      }
+    ]
+  }
+}

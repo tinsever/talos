@@ -818,7 +818,7 @@ export class Resources {
   wrapMember(guildId: string, data: S["GuildMemberResponse"]): GuildMember {
     const value = new GuildMember(guildId, data, this);
     this.memberCache.set(`${guildId}:${value.id}`, value);
-    this.users.wrap(data.user);
+    if (this.users.cache.maxSize > 0) this.users.wrap(data.user);
     return value;
   }
   wrapRole(guildId: string, data: S["GuildRoleResponse"]): Role {
@@ -834,22 +834,32 @@ export class Resources {
     this.roleCache.clear();
   }
   apply(event: KnownDispatch): void {
+    const users = this.users.cache.maxSize > 0;
+    const channels = this.channels.cache.maxSize > 0;
+    const guilds = this.guilds.cache.maxSize > 0;
+    const members = this.memberCache.maxSize > 0;
+    const roles = this.roleCache.maxSize > 0;
+    if (!users && !channels && !guilds && !members && !roles) return;
     switch (event.t) {
       case "READY":
         this.clear();
-        this.users.wrap(event.d.user);
-        for (const u of event.d.users ?? []) this.users.wrap(u);
-        for (const c of event.d.private_channels ?? []) this.channels.wrap(c);
+        if (users) {
+          this.users.wrap(event.d.user);
+          for (const u of event.d.users ?? []) this.users.wrap(u);
+        }
+        if (channels)
+          for (const c of event.d.private_channels ?? []) this.channels.wrap(c);
         for (const g of event.d.guilds ?? [])
           if (!g.unavailable)
             this.apply({ op: 0, t: "GUILD_CREATE", s: event.s, d: g });
         break;
       case "CHANNEL_CREATE":
       case "CHANNEL_UPDATE":
-        this.channels.wrap(event.d);
+        if (channels) this.channels.wrap(event.d);
         break;
       case "CHANNEL_UPDATE_BULK":
-        for (const c of event.d.channels) this.channels.wrap(c);
+        if (channels)
+          for (const c of event.d.channels) this.channels.wrap(c);
         break;
       case "CHANNEL_DELETE":
         this.channels.cache.delete(event.d.id);
@@ -857,43 +867,47 @@ export class Resources {
       case "GUILD_CREATE":
       case "GUILD_SYNC":
         if (!event.d.unavailable) {
-          this.guilds.wrap(event.d.properties);
-          for (const c of event.d.channels ?? []) this.channels.wrap(c);
-          for (const r of event.d.roles ?? [])
-            this.wrapRole(
-              event.d.id,
-              r,
-            ); /* Reduced member payloads require explicit fetch before hydration. */
+          if (guilds) this.guilds.wrap(event.d.properties);
+          if (channels)
+            for (const c of event.d.channels ?? []) this.channels.wrap(c);
+          if (roles)
+            for (const r of event.d.roles ?? []) this.wrapRole(event.d.id, r);
+          // Reduced member payloads require explicit fetch before hydration.
         }
         break;
       case "GUILD_UPDATE":
-        this.guilds.wrap(event.d);
+        if (guilds) this.guilds.wrap(event.d);
         break;
       case "GUILD_DELETE":
         this.clearGuild(event.d.id);
         break;
       case "GUILD_MEMBER_ADD":
       case "GUILD_MEMBER_UPDATE":
-        this.wrapMember(event.d.guild_id, event.d);
+        if (members) this.wrapMember(event.d.guild_id, event.d);
+        else if (users) this.users.wrap(event.d.user);
         break;
       case "GUILD_MEMBERS_CHUNK":
-        for (const m of event.d.members) this.wrapMember(event.d.guild_id, m);
+        if (members)
+          for (const m of event.d.members) this.wrapMember(event.d.guild_id, m);
+        else if (users)
+          for (const m of event.d.members) this.users.wrap(m.user);
         break;
       case "GUILD_MEMBER_REMOVE":
         this.memberCache.delete(`${event.d.guild_id}:${event.d.user.id}`);
         break;
       case "GUILD_ROLE_CREATE":
       case "GUILD_ROLE_UPDATE":
-        this.wrapRole(event.d.guild_id, event.d.role);
+        if (roles) this.wrapRole(event.d.guild_id, event.d.role);
         break;
       case "GUILD_ROLE_UPDATE_BULK":
-        for (const role of event.d.roles) this.wrapRole(event.d.guild_id, role);
+        if (roles)
+          for (const role of event.d.roles) this.wrapRole(event.d.guild_id, role);
         break;
       case "GUILD_ROLE_DELETE":
         this.roleCache.delete(`${event.d.guild_id}:${event.d.role_id}`);
         break;
       case "USER_UPDATE":
-        this.users.wrap(event.d);
+        if (users) this.users.wrap(event.d);
         break;
     }
   }

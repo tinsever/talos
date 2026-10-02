@@ -183,6 +183,12 @@ try {
   high.client.on("messageCreate", (value) => { consumed += value.id.length; });
   add("client/small message cache off", () => high.socket.receive(messageFrame));
   add("client/rich message cache off", () => high.socket.receive(richFrame), 500);
+  add("client/small message burst 1000 cache off", () => {
+    for (let i = 0; i < 1000; i++) high.socket.receive(messageFrame);
+  }, 10, "1000-message burst");
+  add("client/rich message burst 1000 cache off", () => {
+    for (let i = 0; i < 1000; i++) high.socket.receive(richFrame);
+  }, 10, "1000-message burst");
   if (experiments) {
     add("experiment/client small fast emitter", () => withPatch(TypedEmitter.prototype, "emit", fastEmit, () => high.socket.receive(messageFrame)));
     add("experiment/client rich fast emitter", () => withPatch(TypedEmitter.prototype, "emit", fastEmit, () => high.socket.receive(richFrame)), 500);
@@ -225,6 +231,16 @@ try {
   const headers = { Authorization: "Bot synthetic", "Accept-Language": "en-US" };
   add("http/direct fetch + json", async () => { consumed += (await (await fetch(`${api}/v1/users/@me`, { headers, credentials: "omit", redirect: "error" })).json()).id.length; }, 300);
   add("http/REST GET + json", async () => { consumed += (await httpREST.request("GET", "/users/@me")).id.length; }, 300);
+  add("http/REST POST + json", async () => { consumed += (await httpREST.request("POST", "/channels/{channel_id}/messages", { params: { channel_id: "10" }, body: { content: "Pong" } })).id.length; }, 300);
+  for (const method of ["GET", "POST"]) {
+    for (const sameRoute of [true, false]) {
+      add(`http/REST ${method} burst 50 ${sameRoute ? "same" : "different"} routes`, () => Promise.all(
+        Array.from({ length: 50 }, (_, i) => method === "GET"
+          ? httpREST.request("GET", "/users/{user_id}", { params: { user_id: sameRoute ? "1" : String(i) } })
+          : httpREST.request("POST", "/channels/{channel_id}/messages", { params: { channel_id: sameRoute ? "10" : String(i) }, body: { content: "Pong" } })),
+      ), 10, "50-request burst");
+    }
+  }
   let inFlight = 0, peak = 0, calls = 0;
   const delayedREST = new RESTClient({ ...restOptions, maxConcurrentRequests: 10, fetch: async () => {
     inFlight++; peak = Math.max(peak, inFlight); calls++;

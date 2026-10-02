@@ -124,7 +124,7 @@ export class RESTClient {
     const metadata = routes[routeKey as keyof typeof routes];
     if (!metadata)
       throw new TypeError(`Unknown Fluxer route: ${method} ${route}`);
-    const path = route.replace(/\{([^}]+)\}/g, (_, name: string) => {
+    const path = route.includes("{") ? route.replace(/\{([^}]+)\}/g, (_, name: string) => {
       const value = input.params?.[name];
       if (value === undefined || value === null || String(value).length === 0)
         throw new TypeError(`Missing path parameter: ${name}`);
@@ -132,7 +132,7 @@ export class RESTClient {
       if (encoded === "." || encoded === "..")
         throw new TypeError(`Invalid path parameter: ${name}`);
       return encoded;
-    });
+    }) : route;
     const url =
       route === "/.well-known/fluxer"
         ? new URL(path, this.options.origin ?? this.base)
@@ -193,22 +193,39 @@ export class RESTClient {
     signal: AbortSignal,
     fn: () => Promise<T>,
   ): Promise<T> {
-    const previous = this.tails.get(key) ?? Promise.resolve();
+    const read =
+      key.startsWith("GET ") ||
+      key.startsWith("HEAD ") ||
+      key.startsWith("OPTIONS ");
+    if (read && this.rateLimits.canPipeline?.(key)) {
+      signal.throwIfAborted();
+      return fn();
+    }
+    const previous = this.tails.get(key);
     let release!: () => void;
     const current = new Promise<void>((resolve) => {
       release = resolve;
     });
-    const tail = previous.then(() => current);
+    const tail = previous ? previous.then(() => current) : current;
     this.tails.set(key, tail);
+    let acquired = false;
     try {
-      await abortable(previous, signal);
+      if (previous) await abortable(previous, signal);
+      acquired = true;
       signal.throwIfAborted();
+      // Waiting readers recheck the state learned by the first response.
+      if (read && this.rateLimits.canPipeline?.(key)) release();
       return await fn();
     } finally {
       release();
-      void tail.then(() => {
+      if (acquired) {
         if (this.tails.get(key) === tail) this.tails.delete(key);
-      });
+      } else {
+        // A cancelled waiter must not let a later write bypass its predecessor.
+        void tail.then(() => {
+          if (this.tails.get(key) === tail) this.tails.delete(key);
+        });
+      }
     }
   }
 
@@ -230,11 +247,14 @@ export class RESTClient {
     body: BodyInit | undefined,
     signal: AbortSignal,
   ): Promise<unknown> {
-    const safe = ["GET", "HEAD", "OPTIONS", "PUT", "DELETE"].includes(method);
+    const safe = method === "GET" || method === "HEAD" || method === "OPTIONS" ||
+      method === "PUT" || method === "DELETE";
     for (let attempt = 0; ; attempt++) {
-      const start = Date.now();
+      const start = this.options.onDiagnostic ? Date.now() : 0;
       let response: Response;
       let data: unknown;
+      let rateLimit: { wait: number; global: boolean } | undefined;
+      let penalizing = false;
       try {
         const release = await this.scheduler.acquire(signal);
         try {
@@ -253,18 +273,18 @@ export class RESTClient {
             }),
             signal,
           );
-          await abortable(
-            Promise.resolve(this.rateLimits.observe(key, response.headers)),
-            signal,
-          );
-          this.diagnostic({
-            type: "response",
-            method,
-            route,
-            attempt,
-            status: response.status,
-            durationMs: Date.now() - start,
-          });
+          const observation = this.rateLimits.observe(key, response.headers);
+          if (observation) await abortable(observation, signal);
+          signal.throwIfAborted();
+          if (this.options.onDiagnostic)
+            this.diagnostic({
+              type: "response",
+              method,
+              route,
+              attempt,
+              status: response.status,
+              durationMs: Date.now() - start,
+            });
           const json = response.headers.get("Content-Type")?.includes("json");
           data =
             response.status === 204 || method === "HEAD"
@@ -277,12 +297,31 @@ export class RESTClient {
                       : response.text(),
                   signal,
                 );
+          if (response.status === 429) {
+            const denial = data && typeof data === "object"
+              ? data as Record<string, unknown> : {};
+            const seconds = Number(
+              denial.retry_after ?? response.headers.get("Retry-After") ?? 1,
+            );
+            const wait = Number.isFinite(seconds) && seconds > 0
+              ? seconds * 1_000 : 1_000;
+            const global = denial.global === true ||
+              response.headers.get("X-RateLimit-Global") === "true";
+            rateLimit = { wait, global };
+            // Record the penalty before a released slot admits queued reads,
+            // including when a distributed store updates asynchronously.
+            penalizing = true;
+            const penalty = this.rateLimits.penalize(key, wait, global);
+            if (penalty) await abortable(penalty, signal);
+            signal.throwIfAborted();
+            penalizing = false;
+          }
         } finally {
           release();
         }
       } catch (error) {
         signal.throwIfAborted();
-        if (!safe || attempt >= this.maxRetries) throw error;
+        if (penalizing || !safe || attempt >= this.maxRetries) throw error;
         const wait =
           Math.min(10_000, 250 * 2 ** attempt) * (0.5 + Math.random() * 0.5);
         this.diagnostic({
@@ -297,22 +336,7 @@ export class RESTClient {
       }
       if (response.ok) return data;
       if (response.status === 429) {
-        const denial =
-          data && typeof data === "object"
-            ? (data as Record<string, unknown>)
-            : {};
-        const seconds = Number(
-          denial.retry_after ?? response.headers.get("Retry-After") ?? 1,
-        );
-        const wait =
-          Number.isFinite(seconds) && seconds > 0 ? seconds * 1_000 : 1_000;
-        const global =
-          denial.global === true ||
-          response.headers.get("X-RateLimit-Global") === "true";
-        await abortable(
-          Promise.resolve(this.rateLimits.penalize(key, wait, global)),
-          signal,
-        );
+        const { wait, global } = rateLimit!;
         this.diagnostic({
           type: "rateLimit",
           method,

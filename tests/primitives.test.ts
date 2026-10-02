@@ -49,6 +49,15 @@ describe("bounded cache", () => {
 });
 
 describe("event delivery", () => {
+  it("handles rejecting thenables and throwing then getters", async () => {
+    const failures = vi.fn();
+    const emitter = new TypedEmitter<{ value: number }>(failures);
+    emitter.on("value", () => ({ then(_resolve: unknown, reject: (error: unknown) => void) { reject("thenable"); } }));
+    emitter.on("value", () => ({ get then() { throw "getter"; } }));
+    emitter.emit("value", 1);
+    for (let i = 0; i < 4; i++) await Promise.resolve();
+    expect(failures.mock.calls).toEqual([["getter", "value"], ["thenable", "value"]]);
+  });
   it("isolates synchronous and asynchronous listener failures while delivering to every listener", async () => {
     const failures = vi.fn(), emitter = new TypedEmitter<{ value: number }>(failures);
     const sync = new Error("sync"), async = new Error("async"), listener = vi.fn();
@@ -156,6 +165,65 @@ describe("concurrency queue", () => {
 });
 
 describe("shared rate limits", () => {
+  it("does not pipeline malformed or evicted rate-limit state", async () => {
+    const store = new MemoryRateLimitStore(2);
+    store.observe("bad", new Headers({ "X-RateLimit-Remaining": "invalid", "X-RateLimit-Reset-After": "1" }));
+    expect(store.canPipeline("bad")).toBe(false);
+    store.observe("a", new Headers({ "X-RateLimit-Remaining": "2", "X-RateLimit-Reset-After": "1" }));
+    store.observe("b", new Headers({ "X-RateLimit-Remaining": "2", "X-RateLimit-Reset-After": "1" }));
+    await store.reserve("a", new AbortController().signal);
+    store.observe("c", new Headers({ "X-RateLimit-Remaining": "2", "X-RateLimit-Reset-After": "1" }));
+    expect(store.canPipeline("b")).toBe(false);
+  });
+  it("bounds concurrent reservations when an exhausted window resets", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+    const store = new MemoryRateLimitStore(), signal = new AbortController().signal;
+    store.observe("a", new Headers({
+      "X-RateLimit-Bucket": "shared", "X-RateLimit-Limit": "2",
+      "X-RateLimit-Remaining": "0", "X-RateLimit-Reset-After": "1",
+    }));
+    store.observe("b", new Headers({ "X-RateLimit-Bucket": "shared" }));
+    let admitted = 0;
+    let window = 0, remaining = 0;
+    const pending = Array.from({ length: 5 }, (_, i) =>
+      store.reserve(i % 2 ? "a" : "b", signal).then(() => {
+        admitted++;
+        if (Date.now() !== window) { window = Date.now(); remaining = 2; }
+        store.observe(i % 2 ? "a" : "b", new Headers({
+          "X-RateLimit-Bucket": "shared", "X-RateLimit-Remaining": String(--remaining),
+          "X-RateLimit-Reset-After": "1",
+        }));
+      }));
+    await vi.advanceTimersByTimeAsync(999);
+    expect(admitted).toBe(0);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(admitted).toBe(2);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(admitted).toBe(4);
+    await vi.advanceTimersByTimeAsync(1000);
+    await Promise.all(pending);
+    expect(admitted).toBe(5);
+  });
+
+  it("probes unknown and expired routes and blocks pipelining under penalties", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+    const store = new MemoryRateLimitStore();
+    expect(store.canPipeline("unknown")).toBe(false);
+    store.observe("unlimited", new Headers());
+    expect(store.canPipeline("unlimited")).toBe(true);
+    store.observe("limited", new Headers({ "X-RateLimit-Remaining": "1", "X-RateLimit-Reset-After": "1" }));
+    expect(store.canPipeline("limited")).toBe(true);
+    await store.reserve("limited", new AbortController().signal);
+    expect(store.canPipeline("limited")).toBe(false);
+    vi.setSystemTime(1000);
+    expect(store.canPipeline("limited")).toBe(false);
+    store.penalize("unlimited", 100, true);
+    expect(store.canPipeline("unlimited")).toBe(false);
+    vi.setSystemTime(1100);
+    expect(store.canPipeline("unlimited")).toBe(true);
+  });
   it("validates bucket capacity", () => {
     for (const size of [0, -1, NaN, 1.5])
       expect(() => new MemoryRateLimitStore(size)).toThrow(RangeError);
@@ -193,6 +261,50 @@ describe("shared rate limits", () => {
 });
 
 describe("immutable snapshots", () => {
+  it("preserves aliases, sparse arrays, undefined, and literal __proto__ keys", () => {
+    const shared = { value: 1 };
+    const list = new Array(3);
+    list[2] = shared;
+    const input = { a: shared, b: shared, list, absent: undefined, ...JSON.parse('{"__proto__":{"polluted":true}}') };
+    const result = snapshot(input);
+    expect(result.a).toBe(result.b);
+    expect(result.a).toBe(result.list[2]);
+    expect(0 in result.list).toBe(false);
+    expect(result).toHaveProperty("absent", undefined);
+    expect(Object.hasOwn(result, "__proto__")).toBe(true);
+    expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    expect(Object.isFrozen(result.__proto__)).toBe(true);
+  });
+
+  it("reuses owned immutable snapshots but copies caller-frozen objects", () => {
+    const raw = Object.freeze({ nested: { value: 1 } });
+    const first = snapshot(raw);
+    raw.nested.value = 2;
+    expect(first.nested.value).toBe(1);
+    expect(snapshot(first)).toBe(first);
+    const updated = snapshot({ ...first, other: true });
+    expect(updated.nested).toBe(first.nested);
+    expect(Object.isFrozen(updated)).toBe(true);
+  });
+
+  it("retains native cloning for built-ins and reads accessors exactly once", () => {
+    const raw: { date: Date; map: Map<string, unknown>; self?: unknown } = {
+      date: new Date(0), map: new Map(),
+    };
+    raw.self = raw;
+    raw.map.set("root", raw);
+    const clone = snapshot(raw);
+    expect(clone.date).toEqual(raw.date);
+    expect(clone.date).not.toBe(raw.date);
+    expect(clone.map.get("root")).toBe(clone);
+    expect(clone.self).toBe(clone);
+    const getter = vi.fn(() => ({ date: new Date(0) }));
+    const input = { first: { value: 1 }, get nested() { return getter(); } };
+    expect(snapshot(input).nested.date).toEqual(new Date(0));
+    expect(getter).toHaveBeenCalledTimes(1);
+    expect(() => snapshot({ bad: () => {} })).toThrow();
+  });
   it("clones nested and cyclic data and protects the original from caller mutations", () => {
     const input = { nested: { value: 1 }, list: [{ value: 2 }], self: null as unknown };
     input.self = input;

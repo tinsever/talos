@@ -69,10 +69,19 @@ Authenticated requests do not follow redirects.
 Per-request `timeoutMs` overrides the client default. `signal` can cancel a request
 while it is queued or running. Timeouts and cancellations also bound retry waits.
 
-Requests with the same method and concrete path run in order. Different paths can
-run concurrently up to the configured limit. When pending capacity is full, a new
+Writes with the same method and concrete path run in order. With the default
+in-memory store, `GET`, `HEAD`, and `OPTIONS` requests can overlap after the first
+response establishes rate-limit state. Unknown and expired buckets are probed
+before admitting another read burst; every read still reserves quota. Custom
+stores retain sequential reads unless they implement `canPipeline(key)` and
+atomic reservations. Different paths can run concurrently up to the configured
+limit. When pending capacity is full, a new
 request rejects with `RequestQueueFullError` rather than waiting in another queue.
 `rest.stats` reports `pending`, `active`, and `waiting` counts.
+
+Concurrent reads can complete out of order. If a response supplies no rate-limit
+headers, the in-memory store permits bounded concurrency and learns limits from
+HTTP 429 responses. Missing headers do not prove that the server has no limit.
 
 ## Retries
 
@@ -81,7 +90,8 @@ Talos retries network failures and HTTP 5xx responses for `GET`, `HEAD`, `OPTION
 failures for `POST` or `PATCH`.
 
 HTTP 429 is handled for all methods: Talos records the route or global rate limit
-and retries within `maxRetries` and the request deadline. The delay comes from
+before releasing the concurrency slot, then retries within `maxRetries` and the
+request deadline. Requests already in flight may still complete. The delay comes from
 `retry_after` or `Retry-After`, interpreted as seconds.
 
 A failed message send can still have reached the server. Retrying a `POST` after a

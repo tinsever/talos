@@ -30,6 +30,84 @@ function clientSetup(cache = 0) {
   return { client, socket, fetch };
 }
 describe("bot integration", () => {
+  it("isolates messages when a customized resource handler retains the payload", async () => {
+    const { client, socket } = clientSetup();
+    const connecting = client.connect();
+    socket.hello(); socket.ready(); await connecting;
+    const original = client.resources.apply.bind(client.resources);
+    let raw: ReturnType<typeof message> | undefined;
+    vi.spyOn(client.resources, "apply").mockImplementation(dispatch => {
+      if (dispatch.t === "MESSAGE_CREATE") raw = dispatch.d;
+      original(dispatch);
+    });
+    const received = client.waitFor("messageCreate", () => true, { timeoutMs: 1000 });
+    socket.receive(0, message(), "MESSAGE_CREATE", 2);
+    const wrapped = await received;
+    expect(Object.isFrozen(raw)).toBe(false);
+    raw!.content = "changed";
+    expect(wrapped.content).toBe("hello");
+  });
+  it("copies transport data before invoking a customized message wrapper", async () => {
+    const { client, socket } = clientSetup();
+    const connecting = client.connect();
+    socket.hello(); socket.ready(); await connecting;
+    const original = client.messages.wrap.bind(client.messages);
+    let raw: ReturnType<typeof message> | undefined;
+    vi.spyOn(client.messages, "wrap").mockImplementation(data => {
+      raw = data;
+      return original(data);
+    });
+    const received = client.waitFor("messageCreate", () => true, { timeoutMs: 1000 });
+    socket.receive(0, message(), "MESSAGE_CREATE", 2);
+    const wrapped = await received;
+    raw!.content = "changed";
+    expect(wrapped.content).toBe("hello");
+  });
+  it.each(["client", "gateway", "processing hook"] as const)(
+    "keeps raw payloads mutable and message snapshots isolated with a %s observer",
+    async (observer) => {
+      const socket = new FakeSocket();
+      let raw: ReturnType<typeof message> | undefined;
+      const client = new Client({ token: "x",
+        endpoints: { api_public: "https://example", gateway: "wss://example" },
+        gateway: { webSocket: () => socket,
+          ...(observer === "processing hook" ? { processDispatch: async (dispatch: { t: string; d: unknown }) => {
+            if (dispatch.t === "MESSAGE_CREATE") raw = dispatch.d as ReturnType<typeof message>;
+          } } : {}),
+        },
+      });
+      clients.push(client);
+      if (observer === "client") client.on("dispatch", dispatch => {
+        if (dispatch.t === "MESSAGE_CREATE") raw = dispatch.d as ReturnType<typeof message>;
+      });
+      const connecting = client.connect();
+      socket.hello(); socket.ready(); await connecting;
+      if (observer === "gateway") client.gateway.on("dispatch", dispatch => {
+        if (dispatch.t === "MESSAGE_CREATE") raw = dispatch.d as ReturnType<typeof message>;
+      });
+      const received = client.waitFor("messageCreate", () => true, { timeoutMs: 1000 });
+      socket.receive(0, message(), "MESSAGE_CREATE", 2);
+      const wrapped = await received;
+      expect(Object.isFrozen(wrapped.data.author)).toBe(true);
+      expect(Object.isFrozen(raw)).toBe(false);
+      raw!.content = "changed";
+      raw!.author.username = "changed";
+      expect(wrapped.content).toBe("hello");
+      expect(wrapped.author.username).toBe("bot");
+    },
+  );
+
+  it("keeps unobserved transport messages deeply immutable and caches the emitted snapshot", async () => {
+    const { client, socket } = clientSetup(1);
+    const connecting = client.connect();
+    socket.hello(); socket.ready(); await connecting;
+    const received = client.waitFor("messageCreate", () => true, { timeoutMs: 1000 });
+    socket.receive(0, message(), "MESSAGE_CREATE", 2);
+    const wrapped = await received;
+    expect(client.cache.get("10:20")).toBe(wrapped);
+    expect(() => { wrapped.author.username = "changed"; }).toThrow(TypeError);
+    expect(() => { wrapped.data.mentions.push(user); }).toThrow(TypeError);
+  });
   it("rejects invalid token rotation before changing REST authorization", async () => {
     const { client, socket, fetch } = clientSetup();
     const connecting = client.connect();

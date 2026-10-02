@@ -551,6 +551,7 @@
     "kind": "class",
     "members": [
       "constructor(maxBuckets = 1000)",
+      "canPipeline(key: string): boolean",
       "async reserve(key: string, signal: AbortSignal): Promise<void>",
       "observe(key: string, headers: Headers): void",
       "penalize(key: string, retryMs: number, global: boolean): void"
@@ -560,7 +561,7 @@
     "module": "rate-limits",
     "name": "RateLimitStore",
     "kind": "type",
-    "declaration": "export interface RateLimitStore {\n  reserve(key: string, signal: AbortSignal): Promise<void>;\n  observe(key: string, headers: Headers): void | Promise<void>;\n  penalize(key: string, retryMs: number, global: boolean): void | Promise<void>;\n}"
+    "declaration": "export interface RateLimitStore {\n  reserve(key: string, signal: AbortSignal): Promise<void>;\n  observe(key: string, headers: Headers): void | Promise<void>;\n  penalize(key: string, retryMs: number, global: boolean): void | Promise<void>;\n  /** Optional hint for concurrent reads. Reservations must still be atomic. */\n  canPipeline?(key: string): boolean;\n}"
   },
   {
     "module": "resources",

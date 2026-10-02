@@ -18,6 +18,7 @@ The capacity must be a positive integer. See [the source](../../src/rate-limits.
 | `reserve(key, signal)` | `Promise<void>`; waits for route and global limits, then reserves an available slot when the bucket is known. |
 | `observe(key, headers)` | `void`; records bucket IDs, remaining quota, and reset times from response headers. |
 | `penalize(key, retryMs, global)` | `void`; blocks the route or the entire store for the supplied delay in milliseconds. |
+| `canPipeline(key)` | `boolean`; indicates whether known route state permits concurrent reads. Each request must still call `reserve()`. |
 
 Share one instance across REST clients using the same API and credential:
 
@@ -31,6 +32,10 @@ const second = new RESTClient({ api, token, rateLimitStore: store });
 
 This coordinates one process. A custom distributed implementation must make
 `reserve()` atomic and namespace its state by API and credential.
+The optional `canPipeline(key)` hint enables concurrent reads within the REST
+client's concurrency bound. Omit it to retain sequential requests on each route.
+The in-memory store wakes queued reservations when fresh quota arrives and
+admits one probe after a window expires, avoiding simultaneous unreserved bursts.
 
 ## IPCRateLimitStore
 

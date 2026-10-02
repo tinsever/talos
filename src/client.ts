@@ -1,10 +1,10 @@
-import { snapshot } from "./snapshot.js";
+import { adoptSnapshot, snapshot } from "./snapshot.js";
 import { collect } from "./collectors.js";
 import type { CollectorOptions } from "./collectors.js";
 import { LRUCache } from "./cache.js";
 import { discover } from "./discovery.js";
 import type { Instance } from "./discovery.js";
-import { TypedEmitter } from "./events.js";
+import { listenerCount, TypedEmitter } from "./events.js";
 import { GatewayClient } from "./gateway.js";
 import type { GatewayEvents, GatewayOptions } from "./gateway.js";
 import { Message, Messages } from "./messages.js";
@@ -204,14 +204,31 @@ export class Client extends TypedEmitter<ClientEvents> {
       });
       gateway.on("dispatch", (dispatch) => {
         if (this.gatewayClient !== gateway || !this.active) return;
+        const resources = this.resources;
+        const ownsResources = resources.apply === Resources.prototype.apply;
         if (dispatch.t !== "READY")
-          this.resources.apply(dispatch as KnownDispatch);
+          resources.apply(dispatch as KnownDispatch);
+        // JSON.parse owns this payload. Without raw observers or a processing
+        // hook, only the immutable Message will escape, so no copy is needed.
+        const ownsMessage = dispatch.t === "MESSAGE_CREATE" &&
+          ownsResources &&
+          !this.options.gateway?.processDispatch &&
+          listenerCount(this, "dispatch") === 0 &&
+          listenerCount(gateway, "dispatch") === 1 &&
+          this.emit === TypedEmitter.prototype.emit &&
+          gateway.emit === TypedEmitter.prototype.emit;
         this.emit("dispatch", dispatch);
         if (this.gatewayClient !== gateway || !this.active) return;
         if (dispatch.t === "MESSAGE_CREATE") {
           const data = dispatch.d as MessageData;
-          const message = this.messages.wrap(data);
-          this.cache.set(`${data.channel_id}:${data.id}`, message);
+          const messages = this.messages;
+          const message = messages.wrap(
+            ownsMessage && messages.wrap === Messages.prototype.wrap
+              ? adoptSnapshot(data)
+              : data,
+          );
+          if (this.cache.maxSize > 0)
+            this.cache.set(`${data.channel_id}:${data.id}`, message);
           this.emit("messageCreate", message);
         } else if (dispatch.t === "MESSAGE_UPDATE") {
           const data = dispatch.d as ClientEvents["messageUpdate"];

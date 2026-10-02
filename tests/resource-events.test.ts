@@ -4,6 +4,34 @@ import { RESTClient } from "../src/rest.js";
 import type { KnownDispatch } from "../src/gateway-types.js";
 import { user, message, json } from "./helpers.js";
 
+it.each(["users", "members", "channels", "roles", "guilds"] as const)(
+  "hydrates only enabled %s caches, including users from member chunks",
+  (enabled) => {
+    const resources = new Resources(
+      () => new RESTClient({ api: "https://example.test", token: "x" }),
+      { [enabled]: 10 },
+    );
+    const users = vi.spyOn(resources.users, "wrap");
+    const channels = vi.spyOn(resources.channels, "wrap");
+    const guilds = vi.spyOn(resources.guilds, "wrap");
+    const members = vi.spyOn(resources, "wrapMember");
+    const roles = vi.spyOn(resources, "wrapRole");
+    resources.apply({ op: 0, s: 1, t: "GUILD_CREATE", d: {
+      id: "10", properties: { id: "10", name: "Guild", owner_id: "1" },
+      channels: [{ id: "30", type: 0, guild_id: "10" }],
+      roles: [{ id: "10", name: "everyone", position: 0, permissions: "0" }],
+    } } as KnownDispatch);
+    resources.apply({ op: 0, s: 2, t: "GUILD_MEMBERS_CHUNK", d: {
+      guild_id: "10", members: [{ user, roles: ["10"] }],
+    } } as KnownDispatch);
+    expect(users).toHaveBeenCalledTimes(enabled === "users" ? 1 : 0);
+    expect(channels).toHaveBeenCalledTimes(enabled === "channels" ? 1 : 0);
+    expect(guilds).toHaveBeenCalledTimes(enabled === "guilds" ? 1 : 0);
+    expect(members).toHaveBeenCalledTimes(enabled === "members" ? 1 : 0);
+    expect(roles).toHaveBeenCalledTimes(enabled === "roles" ? 1 : 0);
+  },
+);
+
 function setup() {
   const resources = new Resources(
     () => new RESTClient({ api: "https://example.test", token: "synthetic" }),
