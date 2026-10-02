@@ -1,0 +1,111 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Talos",
+  "description": "Guides and class reference for the Talos Fluxer SDK.",
+  "colors": {
+    "primary": "#182135",
+    "light": "#64748B",
+    "dark": "#CBD5E1"
+  },
+  "logo": {
+    "light": "/assets/branding/talos-logo-black.svg",
+    "dark": "/assets/branding/talos-logo-white.svg"
+  },
+  "favicon": {
+    "light": "/assets/branding/talos-symbol-black.svg",
+    "dark": "/assets/branding/talos-symbol-white.svg"
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": [
+              "docs/index",
+              "docs/getting-started",
+              "docs/guide"
+            ]
+          },
+          {
+            "group": "Using Talos",
+            "pages": [
+              "docs/messages",
+              "docs/resources",
+              "docs/rest",
+              "docs/gateway",
+              "VOICE"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "docs/development"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Class reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "docs/classes/index"
+            ]
+          },
+          {
+            "group": "Clients and messages",
+            "pages": [
+              "docs/classes/clients",
+              "docs/classes/messages"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "docs/classes/resources",
+              "docs/classes/managers",
+              "docs/classes/webhooks"
+            ]
+          },
+          {
+            "group": "Utilities and runtime",
+            "pages": [
+              "docs/classes/utilities",
+              "docs/classes/rate-limits",
+              "docs/classes/shards-workers",
+              "docs/classes/voice",
+              "docs/classes/errors"
+            ]
+          },
+          {
+            "group": "SDK internals",
+            "pages": [
+              "docs/classes/internals"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/tinsever/talos"
+      },
+      {
+        "label": "npm",
+        "href": "https://www.npmjs.com/package/talos-fluxer"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/tinsever/talos"
+    }
+  }
+}

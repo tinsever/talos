@@ -5,11 +5,21 @@
 
 # Talos
 
+[![Open on npmx.dev](https://npmx.dev/api/registry/badge/version/talos-fluxer)](https://npmx.dev/package/talos-fluxer)
+
 A portable, TypeScript-first Fluxer SDK.
 
-Run `bun run check` to validate generated contracts, the public API, types, tests,
-and the build.
+Use Talos to build a Fluxer bot, make typed REST requests, or handle gateway and
+voice connections. The core SDK runs on Node and Bun and has no runtime dependencies.
 
-Run `bun run bench` (Node) or `bun run bench:bun` to measure SDK processing and
-local HTTP latency. See [benchmark results and optimization candidates](BENCHMARKS.md)
-for measurements, reproducible commands, and experimental comparisons.
+```sh
+npm install talos-fluxer
+```
+
+Start with the [ping bot](docs/getting-started.md) or follow the
+[command-bot guide](docs/guide.md). The [docs](docs/index.md) cover common tasks;
+the [class reference](docs/classes/index.md) lists every class and its methods.
+[Voice support](VOICE.md) covers media adapters, LiveKit, and recovery.
+
+For SDK development, see [contributing](docs/development.md). `bun run check`
+validates generated contracts, the public API, types, tests, and the build.
