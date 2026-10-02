@@ -76,4 +76,10 @@ jobs:
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
           NPM_CONFIG_PROVENANCE: true
           TALOS_DIST_TAG: ${{ (github.event.release.prerelease || contains(inputs.tag || github.event.release.tag_name, '-')) && 'next' || 'latest' }}
-        run: npm publish ./package.tgz --ignore-scripts --access public --tag "$TALOS_DIST_TAG"
+        run: |
+          # An empty setup-node auth entry prevents npm's OIDC exchange.
+          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
+            npm config delete '//registry.npmjs.org/:_authToken' --location=user
+            unset NODE_AUTH_TOKEN
+          fi
+          npm publish ./package.tgz --ignore-scripts --access public --tag "$TALOS_DIST_TAG"
