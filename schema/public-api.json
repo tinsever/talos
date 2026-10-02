@@ -1,0 +1,1226 @@
+[
+  {
+    "module": "cache",
+    "name": "LRUCache",
+    "kind": "class",
+    "members": [
+      "constructor(\n    readonly maxSize = 100,\n    readonly ttlMs = Infinity,\n  )",
+      "get size(): number",
+      "get(key: K): V | undefined",
+      "set(key: K, value: V): this",
+      "*items(): IterableIterator<[K, V]>",
+      "delete(key: K): boolean",
+      "clear(): void",
+      "sweep(): number"
+    ]
+  },
+  {
+    "module": "client",
+    "name": "Client",
+    "kind": "class",
+    "members": [
+      "readonly cache: LRUCache<string, Message>;",
+      "get user(): User | undefined",
+      "get instance(): Instance | undefined",
+      "get rest(): RESTClient",
+      "get messages(): Messages",
+      "get gateway(): GatewayClient",
+      "get uploads(): Uploads",
+      "get resources(): Resources",
+      "get users(): Resources[\"users\"]",
+      "get channels(): Resources[\"channels\"]",
+      "get guilds(): Resources[\"guilds\"]",
+      "get invites(): Resources[\"invites\"]",
+      "get webhooks(): Resources[\"webhooks\"]",
+      "collect<K extends keyof ClientEvents>(\n    event: K,\n    options: CollectorOptions<ClientEvents[K]>,\n  ): AsyncIterableIterator<ClientEvents[K]>",
+      "onDispatch<K extends keyof DispatchEvents>(\n    event: K,\n    listener: (data: DispatchEvents[K]) => void | Promise<void>,\n  ): () => void",
+      "updateToken(token: string): void",
+      "constructor(private readonly options: ClientOptions)",
+      "async connect(\n    options: { signal?: AbortSignal; timeoutMs?: number } = {},\n  ): Promise<void>",
+      "disconnect(): void",
+      "waitFor<K extends keyof ClientEvents>(\n    event: K,\n    predicate: (value: ClientEvents[K]) => boolean,\n    options: { timeoutMs: number; signal?: AbortSignal },\n  ): Promise<ClientEvents[K]>"
+    ]
+  },
+  {
+    "module": "client",
+    "name": "ClientEvents",
+    "kind": "type",
+    "declaration": "export interface ClientEvents extends GatewayEvents {\n  messageCreate: Message;\n  /** Updates are partial API payloads and should not be treated as complete messages. */\n  messageUpdate: Partial<MessageData> & { id: string; channel_id: string };\n  messageDelete: { id: string; channel_id: string; guild_id?: string };\n}"
+  },
+  {
+    "module": "client",
+    "name": "ClientOptions",
+    "kind": "type",
+    "declaration": "export interface ClientOptions {\n  token: string;\n  origin?: string;\n  /** Supplying endpoints skips discovery. Always use api_public. */\n  endpoints?: { api_public: string; gateway: string };\n  rest?: Omit<RESTOptions, \"api\" | \"token\" | \"authScheme\">;\n  gateway?: Omit<GatewayOptions, \"url\" | \"token\">;\n  cache?: ResourceCacheOptions & { messages?: number };\n}"
+  },
+  {
+    "module": "collectors",
+    "name": "collect",
+    "kind": "value",
+    "type": "<E extends object, K extends keyof E>(emitter: TypedEmitter<E>, event: K, options: CollectorOptions<E[K]>) => AsyncIterableIterator<E[K]>"
+  },
+  {
+    "module": "collectors",
+    "name": "CollectorOptions",
+    "kind": "type",
+    "declaration": "export interface CollectorOptions<T> {\n  filter?: (value: T) => boolean;\n  max?: number;\n  timeoutMs: number;\n  signal?: AbortSignal;\n  maxBuffered?: number;\n}"
+  },
+  {
+    "module": "discovery",
+    "name": "discover",
+    "kind": "value",
+    "type": "(origin?: string, options?: DiscoveryOptions) => Promise<Instance>"
+  },
+  {
+    "module": "discovery",
+    "name": "DiscoveryOptions",
+    "kind": "type",
+    "declaration": "export interface DiscoveryOptions {\n  fetch?: typeof globalThis.fetch;\n  signal?: AbortSignal;\n  timeoutMs?: number;\n}"
+  },
+  {
+    "module": "discovery",
+    "name": "Instance",
+    "kind": "type",
+    "declaration": "export interface Instance {\n  endpoints: { api_public: string; gateway: string; [name: string]: string };\n  features?: Record<string, boolean>;\n  [name: string]: unknown;\n}"
+  },
+  {
+    "module": "gateway-types",
+    "name": "ChannelCount",
+    "kind": "type",
+    "declaration": "export interface ChannelCount extends GuildCount {\n  channel_id: string;\n}"
+  },
+  {
+    "module": "gateway-types",
+    "name": "dispatchEventNames",
+    "kind": "value",
+    "type": "readonly [\"READY\", \"RESUMED\", \"SESSIONS_REPLACE\", \"AUTH_SESSION_CHANGE\", \"RATE_LIMITED\", \"USER_UPDATE\", \"USER_SETTINGS_UPDATE\", \"USER_GUILD_SETTINGS_UPDATE\", \"USER_NOTE_UPDATE\", \"USER_PINNED_DMS_UPDATE\", \"USER_CONNECTIONS_UPDATE\", \"WEBAUTHN_CREDENTIALS_UPDATE\", \"RELATIONSHIP_ADD\", \"RELATIONSHIP_UPDATE\", \"RELATIONSHIP_REMOVE\", \"SAVED_MESSAGE_CREATE\", \"SAVED_MESSAGE_DELETE\", \"RECENT_MENTION_DELETE\", \"FAVORITE_MEME_CREATE\", \"FAVORITE_MEME_UPDATE\", \"FAVORITE_MEME_DELETE\", \"GUILD_CREATE\", \"GUILD_SYNC\", \"GUILD_UPDATE\", \"GUILD_DELETE\", \"GUILD_ROLE_CREATE\", \"GUILD_ROLE_UPDATE\", \"GUILD_ROLE_UPDATE_BULK\", \"GUILD_ROLE_DELETE\", \"GUILD_EMOJIS_UPDATE\", \"GUILD_STICKERS_UPDATE\", \"CHANNEL_CREATE\", \"CHANNEL_UPDATE\", \"CHANNEL_UPDATE_BULK\", \"CHANNEL_DELETE\", \"CHANNEL_RECIPIENT_ADD\", \"CHANNEL_RECIPIENT_REMOVE\", \"WEBHOOKS_UPDATE\", \"INVITE_CREATE\", \"INVITE_DELETE\", \"GUILD_MEMBER_ADD\", \"GUILD_MEMBER_UPDATE\", \"GUILD_MEMBER_REMOVE\", \"GUILD_MEMBERS_CHUNK\", \"GUILD_MEMBER_LIST_UPDATE\", \"GUILD_AUDIT_LOG_ENTRY_CREATE\", \"GUILD_BAN_ADD\", \"GUILD_BAN_REMOVE\", \"PRESENCE_UPDATE\", \"PRESENCE_UPDATE_BULK\", \"PASSIVE_UPDATES\", \"MESSAGE_CREATE\", \"MESSAGE_UPDATE\", \"MESSAGE_DELETE\", \"MESSAGE_DELETE_BULK\", \"MESSAGE_ACK\", \"MESSAGE_REACTION_ADD\", \"MESSAGE_REACTION_ADD_MANY\", \"MESSAGE_REACTION_REMOVE\", \"MESSAGE_REACTION_REMOVE_ALL\", \"MESSAGE_REACTION_REMOVE_EMOJI\", \"TYPING_START\", \"CHANNEL_PINS_UPDATE\", \"CHANNEL_PINS_ACK\", \"VOICE_STATE_UPDATE\", \"VOICE_SERVER_UPDATE\", \"ENTRANCE_SOUND_PLAY\", \"CALL_CREATE\", \"CALL_UPDATE\", \"CALL_DELETE\", \"GUILD_COUNTS_UPDATE\", \"CHANNEL_MEMBER_COUNTS_UPDATE\"]"
+  },
+  {
+    "module": "gateway-types",
+    "name": "DispatchEvents",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "gateway-types",
+    "name": "GuildCount",
+    "kind": "type",
+    "declaration": "export interface GuildCount {\n  guild_id: string;\n  member_count: number;\n  online_count: number;\n}"
+  },
+  {
+    "module": "gateway-types",
+    "name": "GuildReady",
+    "kind": "type",
+    "declaration": "export type GuildReady =\n  | { id: string; unavailable: true; unavailable_hidden?: boolean }\n  | {\n      id: string;\n      unavailable?: false;\n      unavailable_hidden?: boolean;\n      properties: components[\"schemas\"][\"GuildResponse\"];\n      roles: components[\"schemas\"][\"GuildRoleResponse\"][];\n      channels: components[\"schemas\"][\"ChannelResponse\"][];\n      emojis: components[\"schemas\"][\"GuildEmojiResponse\"][];\n      stickers: components[\"schemas\"][\"GuildStickerResponse\"][];\n      members: (Omit<components[\"schemas\"][\"GuildMemberResponse\"], \"user\"> & {\n        user?: Partial<components[\"schemas\"][\"UserPartialResponse\"]> & {\n          id: string;\n        };\n        user_id?: string;\n      })[];\n      member_count: number;\n      online_count: number;\n      presences: Presence[];\n      voice_states: VoiceState[];\n      joined_at: string | null;\n    };"
+  },
+  {
+    "module": "gateway-types",
+    "name": "KnownDispatch",
+    "kind": "type",
+    "declaration": "export type KnownDispatch = {\n  [K in keyof DispatchEvents]: { op: 0; t: K; s: number; d: DispatchEvents[K] };\n}[keyof DispatchEvents];"
+  },
+  {
+    "module": "gateway-types",
+    "name": "MemberListGroup",
+    "kind": "type",
+    "declaration": "export interface MemberListGroup {\n  id: string;\n  count: number;\n}"
+  },
+  {
+    "module": "gateway-types",
+    "name": "MemberListItem",
+    "kind": "type",
+    "declaration": "export type MemberListItem =\n  | { group: MemberListGroup; member?: never }\n  | {\n      group?: never;\n      member: components[\"schemas\"][\"GuildMemberResponse\"] & {\n        presence: Presence | { status: \"offline\"; mobile: false; afk: false };\n      };\n    };"
+  },
+  {
+    "module": "gateway-types",
+    "name": "MemberListOperation",
+    "kind": "type",
+    "declaration": "export type MemberListOperation = {\n  op: \"SYNC\";\n  range: [number, number];\n  items: MemberListItem[];\n};"
+  },
+  {
+    "module": "gateway-types",
+    "name": "Presence",
+    "kind": "type",
+    "declaration": "export interface Presence {\n  user: components[\"schemas\"][\"UserPartialResponse\"];\n  status: string;\n  mobile: boolean;\n  afk: boolean;\n  custom_status: components[\"schemas\"][\"CustomStatusResponse\"] | null;\n  guild_id?: string;\n}"
+  },
+  {
+    "module": "gateway-types",
+    "name": "ReactionAddition",
+    "kind": "type",
+    "declaration": "export interface ReactionAddition {\n  user_id: string;\n  emoji: ReactionEmoji;\n  member?: components[\"schemas\"][\"GuildMemberResponse\"];\n}"
+  },
+  {
+    "module": "gateway-types",
+    "name": "ReactionEmoji",
+    "kind": "type",
+    "declaration": "export interface ReactionEmoji {\n  id?: string;\n  name: string;\n  animated?: boolean;\n}"
+  },
+  {
+    "module": "gateway-types",
+    "name": "RTCRegion",
+    "kind": "type",
+    "declaration": "export interface RTCRegion {\n  id: string;\n  name: string;\n  emoji: string;\n}"
+  },
+  {
+    "module": "gateway-types",
+    "name": "SessionPresence",
+    "kind": "type",
+    "declaration": "export interface SessionPresence {\n  session_id: string;\n  status: string;\n  afk: boolean;\n  mobile: boolean;\n}"
+  },
+  {
+    "module": "gateway-types",
+    "name": "VoiceState",
+    "kind": "type",
+    "declaration": "export interface VoiceState {\n  guild_id: string | null;\n  channel_id: string | null;\n  user_id: string | null;\n  connection_id?: string | null;\n  session_id?: string | null;\n  member?: components[\"schemas\"][\"GuildMemberResponse\"] | null;\n  mute: boolean;\n  deaf: boolean;\n  self_mute: boolean;\n  self_deaf: boolean;\n  suppress?: boolean;\n  self_video?: boolean;\n  self_stream?: boolean;\n  is_mobile?: boolean;\n  viewer_stream_keys?: string[] | null;\n  version?: number;\n  e2ee_capable?: boolean;\n}"
+  },
+  {
+    "module": "gateway",
+    "name": "GatewayClient",
+    "kind": "class",
+    "members": [
+      "get state(): GatewayState",
+      "constructor(private readonly options: GatewayOptions)",
+      "connect(\n    options: { signal?: AbortSignal; timeoutMs?: number } = {},\n  ): Promise<ReadyData>",
+      "disconnect(error: unknown = new GatewayError(\"Gateway disconnected\")): void",
+      "onDispatch<K extends keyof DispatchEvents>(\n    event: K,\n    listener: (data: DispatchEvents[K]) => void | Promise<void>,\n  ): () => void",
+      "updateToken(token: string): void",
+      "setPresence(data: {\n    status: \"online\" | \"idle\" | \"dnd\" | \"invisible\";\n    afk?: boolean;\n    custom_status?: unknown;\n  }): void",
+      "send(op: 3 | 4 | 8 | 14 | 15 | 16, data: unknown): void"
+    ]
+  },
+  {
+    "module": "gateway",
+    "name": "GatewayError",
+    "kind": "value",
+    "type": "typeof GatewayError"
+  },
+  {
+    "module": "gateway",
+    "name": "GatewayEvents",
+    "kind": "type",
+    "declaration": "export interface GatewayEvents {\n  ready: ReadyData;\n  resumed: void;\n  dispatch: GatewayDispatch;\n  state: GatewayState;\n  error: unknown;\n  heartbeat: { latencyMs: number };\n  reconnect: { attempt: number; delayMs: number };\n  close: { code: number; reason: string };\n  unknownOpcode: number;\n}"
+  },
+  {
+    "module": "gateway",
+    "name": "GatewayOptions",
+    "kind": "type",
+    "declaration": "export interface GatewayOptions {\n  url: string;\n  token: string;\n  webSocket?: WebSocketFactory;\n  properties?: {\n    os: string;\n    browser: string;\n    device: string;\n    e2ee_capable?: boolean;\n    mobile?: boolean;\n    latitude?: string;\n    longitude?: string;\n  };\n  ignoredEvents?: string[];\n  shard?: readonly [number, number];\n  maxReconnects?: number;\n  handshakeTimeoutMs?: number;\n  reconnectBaseMs?: number;\n  reconnectMaxMs?: number;\n  /** Runs before every Identify, including fresh sessions after failed Resume. */\n  beforeIdentify?: (context: {\n    shard: readonly [number, number] | undefined;\n    signal: AbortSignal;\n  }) => Promise<void>;\n  /** Ordered durable processing; sequences advance only after this hook resolves. */\n  processDispatch?: (\n    dispatch: GatewayDispatch,\n    context: { signal: AbortSignal },\n  ) => Promise<void>;\n  maxPendingDispatches?: number;\n}"
+  },
+  {
+    "module": "gateway",
+    "name": "GatewayState",
+    "kind": "type",
+    "declaration": "export type GatewayState =\n  | \"idle\"\n  | \"connecting\"\n  | \"identifying\"\n  | \"resuming\"\n  | \"ready\"\n  | \"reconnecting\"\n  | \"closed\";"
+  },
+  {
+    "module": "gateway",
+    "name": "WebSocketFactory",
+    "kind": "type",
+    "declaration": "export type WebSocketFactory = (url: string) => WebSocketLike;"
+  },
+  {
+    "module": "gateway",
+    "name": "WebSocketLike",
+    "kind": "type",
+    "declaration": "export interface WebSocketLike {\n  readonly readyState: number;\n  send(data: string): void;\n  close(code?: number, reason?: string): void;\n  addEventListener<K extends keyof SocketEvents>(\n    type: K,\n    listener: (event: SocketEvents[K]) => void,\n  ): void;\n  removeEventListener<K extends keyof SocketEvents>(\n    type: K,\n    listener: (event: SocketEvents[K]) => void,\n  ): void;\n}"
+  },
+  {
+    "module": "index",
+    "name": "Client",
+    "kind": "value",
+    "type": "typeof Client"
+  },
+  {
+    "module": "index",
+    "name": "ClientEvents",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "index",
+    "name": "ClientOptions",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "index",
+    "name": "discover",
+    "kind": "value",
+    "type": "(origin?: string, options?: DiscoveryOptions) => Promise<Instance>"
+  },
+  {
+    "module": "index",
+    "name": "DiscoveryOptions",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "index",
+    "name": "dispatchEventNames",
+    "kind": "value",
+    "type": "readonly [\"READY\", \"RESUMED\", \"SESSIONS_REPLACE\", \"AUTH_SESSION_CHANGE\", \"RATE_LIMITED\", \"USER_UPDATE\", \"USER_SETTINGS_UPDATE\", \"USER_GUILD_SETTINGS_UPDATE\", \"USER_NOTE_UPDATE\", \"USER_PINNED_DMS_UPDATE\", \"USER_CONNECTIONS_UPDATE\", \"WEBAUTHN_CREDENTIALS_UPDATE\", \"RELATIONSHIP_ADD\", \"RELATIONSHIP_UPDATE\", \"RELATIONSHIP_REMOVE\", \"SAVED_MESSAGE_CREATE\", \"SAVED_MESSAGE_DELETE\", \"RECENT_MENTION_DELETE\", \"FAVORITE_MEME_CREATE\", \"FAVORITE_MEME_UPDATE\", \"FAVORITE_MEME_DELETE\", \"GUILD_CREATE\", \"GUILD_SYNC\", \"GUILD_UPDATE\", \"GUILD_DELETE\", \"GUILD_ROLE_CREATE\", \"GUILD_ROLE_UPDATE\", \"GUILD_ROLE_UPDATE_BULK\", \"GUILD_ROLE_DELETE\", \"GUILD_EMOJIS_UPDATE\", \"GUILD_STICKERS_UPDATE\", \"CHANNEL_CREATE\", \"CHANNEL_UPDATE\", \"CHANNEL_UPDATE_BULK\", \"CHANNEL_DELETE\", \"CHANNEL_RECIPIENT_ADD\", \"CHANNEL_RECIPIENT_REMOVE\", \"WEBHOOKS_UPDATE\", \"INVITE_CREATE\", \"INVITE_DELETE\", \"GUILD_MEMBER_ADD\", \"GUILD_MEMBER_UPDATE\", \"GUILD_MEMBER_REMOVE\", \"GUILD_MEMBERS_CHUNK\", \"GUILD_MEMBER_LIST_UPDATE\", \"GUILD_AUDIT_LOG_ENTRY_CREATE\", \"GUILD_BAN_ADD\", \"GUILD_BAN_REMOVE\", \"PRESENCE_UPDATE\", \"PRESENCE_UPDATE_BULK\", \"PASSIVE_UPDATES\", \"MESSAGE_CREATE\", \"MESSAGE_UPDATE\", \"MESSAGE_DELETE\", \"MESSAGE_DELETE_BULK\", \"MESSAGE_ACK\", \"MESSAGE_REACTION_ADD\", \"MESSAGE_REACTION_ADD_MANY\", \"MESSAGE_REACTION_REMOVE\", \"MESSAGE_REACTION_REMOVE_ALL\", \"MESSAGE_REACTION_REMOVE_EMOJI\", \"TYPING_START\", \"CHANNEL_PINS_UPDATE\", \"CHANNEL_PINS_ACK\", \"VOICE_STATE_UPDATE\", \"VOICE_SERVER_UPDATE\", \"ENTRANCE_SOUND_PLAY\", \"CALL_CREATE\", \"CALL_UPDATE\", \"CALL_DELETE\", \"GUILD_COUNTS_UPDATE\", \"CHANNEL_MEMBER_COUNTS_UPDATE\"]"
+  },
+  {
+    "module": "index",
+    "name": "FileAttachment",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "index",
+    "name": "FluxerAPIError",
+    "kind": "value",
+    "type": "typeof FluxerAPIError"
+  },
+  {
+    "module": "index",
+    "name": "GatewayClient",
+    "kind": "value",
+    "type": "typeof GatewayClient"
+  },
+  {
+    "module": "index",
+    "name": "GatewayError",
+    "kind": "value",
+    "type": "typeof GatewayError"
+  },
+  {
+    "module": "index",
+    "name": "GatewayEvents",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "index",
+    "name": "GatewayOptions",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "index",
+    "name": "GatewayState",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "index",
+    "name": "Instance",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "index",
+    "name": "LRUCache",
+    "kind": "value",
+    "type": "typeof LRUCache"
+  },
+  {
+    "module": "index",
+    "name": "Message",
+    "kind": "value",
+    "type": "typeof Message"
+  },
+  {
+    "module": "index",
+    "name": "MessageInput",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "index",
+    "name": "Messages",
+    "kind": "value",
+    "type": "typeof Messages"
+  },
+  {
+    "module": "index",
+    "name": "multipart",
+    "kind": "value",
+    "type": "(body: { content?: string | null; embeds?: { url?: string | null; title?: string | null; color?: number | null; timestamp?: string | number | null; description?: string | null; author?: { name: string; url?: string | null; icon_url?: string | null; } | null; image?: { url: string; description?: string | null; } | null; thumbnail?: { url: string; description?: string | null; } | null; footer?: { text: string; icon_url?: string | null; } | null; fields?: { name: string; value: string; inline?: boolean; }[] | null; }[]; attachments?: ({ title?: string | null; description?: string | null; flags?: number; duration?: number | null; waveform?: string | null; id: number; filename: string; content_type: string; upload_filename: string; file_size: number; } | { title?: string | null; description?: string | null; flags?: number; duration?: number | null; waveform?: string | null; id: number; filename: string; content_type?: string; })[]; message_reference?: { message_id: string | number; channel_id?: string | number; guild_id?: string | number; type?: 0 | 1; attachment_ids?: (string | number)[]; embed_indices?: number[]; } | null; allowed_mentions?: { parse?: (\"users\" | \"roles\" | \"everyone\")[]; users?: (string | number)[]; roles?: (string | number)[]; replied_user?: boolean; } | null; flags?: number; nonce?: string | number; favorite_meme_id?: string | number | null; sticker_ids?: (string | number)[] | null; tts?: boolean; } | { content?: string | null; embeds?: { url?: string | null; title?: string | null; color?: number | null; timestamp?: string | number | null; description?: string | null; author?: { name: string; url?: string | null; icon_url?: string | null; } | null; image?: { url: string; description?: string | null; } | null; thumbnail?: { url: string; description?: string | null; } | null; footer?: { text: string; icon_url?: string | null; } | null; fields?: { name: string; value: string; inline?: boolean; }[] | null; }[]; allowed_mentions?: { parse?: (\"users\" | \"roles\" | \"everyone\")[]; users?: (string | number)[]; roles?: (string | number)[]; replied_user?: boolean; } | null; flags?: number; attachments?: ({ title?: string | null; description?: string | null; flags?: number; duration?: number | null; waveform?: string | null; id: number; filename: string; content_type: string; upload_filename: string; file_size: number; } | { title?: string | null; description?: string | null; flags?: number; duration?: number | null; waveform?: string | null; id?: string | number; filename?: string; })[]; message_snapshots?: { attachments?: { id: string | number; title?: string | null; description?: string | null; }[]; }[]; }, files: readonly FileAttachment[]) => FormData"
+  },
+  {
+    "module": "index",
+    "name": "PinnedMessagesPage",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "index",
+    "name": "RequestQueueFullError",
+    "kind": "value",
+    "type": "typeof RequestQueueFullError"
+  },
+  {
+    "module": "index",
+    "name": "RESTClient",
+    "kind": "value",
+    "type": "typeof RESTClient"
+  },
+  {
+    "module": "index",
+    "name": "RESTDiagnostic",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "index",
+    "name": "RESTOptions",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "index",
+    "name": "SendOptions",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "index",
+    "name": "WebSocketFactory",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "index",
+    "name": "WebSocketLike",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "messages",
+    "name": "FileAttachment",
+    "kind": "type",
+    "declaration": "export interface FileAttachment {\n  data: Blob;\n  name: string;\n  description?: string;\n}"
+  },
+  {
+    "module": "messages",
+    "name": "Message",
+    "kind": "class",
+    "members": [
+      "readonly data: MessageData;",
+      "constructor(\n    data: MessageData,\n    private readonly messages: Messages,\n  )",
+      "get id(): string",
+      "get channelId(): string",
+      "get guildId(): string | null",
+      "get content(): string",
+      "get author(): MessageData[\"author\"]",
+      "reply(input: MessageInput, options?: SendOptions): Promise<Message>",
+      "edit(input: string | MessageEdit, options?: SendOptions): Promise<Message>",
+      "react(emoji: string, options?: OperationOptions): Promise<void>",
+      "pin(options?: OperationOptions): Promise<void>",
+      "unpin(options?: OperationOptions): Promise<void>",
+      "delete(options?: OperationOptions): Promise<void>"
+    ]
+  },
+  {
+    "module": "messages",
+    "name": "MessageInput",
+    "kind": "type",
+    "declaration": "export type MessageInput = string | MessageCreate;"
+  },
+  {
+    "module": "messages",
+    "name": "Messages",
+    "kind": "class",
+    "members": [
+      "constructor(private readonly rest: RESTClient)",
+      "wrap(data: MessageData): Message",
+      "async send(\n    channelId: string,\n    input: MessageInput,\n    options: SendOptions = {},\n  ): Promise<Message>",
+      "async fetch(\n    channelId: string,\n    messageId: string,\n    options: OperationOptions = {},\n  ): Promise<Message>",
+      "async edit(\n    channelId: string,\n    messageId: string,\n    input: string | MessageEdit,\n    options: SendOptions = {},\n  ): Promise<Message>",
+      "delete(\n    channelId: string,\n    messageId: string,\n    options: OperationOptions = {},\n  ): Promise<void>",
+      "async list(\n    channelId: string,\n    query: HistoryQuery = {},\n    options: OperationOptions = {},\n  ): Promise<Message[]>",
+      "async pins(\n    channelId: string,\n    query: NonNullable<\n      RequestOptions<\"GET\", \"/channels/{channel_id}/messages/pins\">[\"query\"]\n    > = {},\n    options: OperationOptions = {},\n  ): Promise<PinnedMessagesPage>",
+      "bulkDelete(\n    channelId: string,\n    messageIds: readonly string[],\n    options: OperationOptions = {},\n  ): Promise<void>",
+      "react(\n    channelId: string,\n    messageId: string,\n    emoji: string,\n    options: OperationOptions = {},\n  ): Promise<void>",
+      "unreact(\n    channelId: string,\n    messageId: string,\n    emoji: string,\n    options: OperationOptions = {},\n  ): Promise<void>",
+      "pin(\n    channelId: string,\n    messageId: string,\n    options: OperationOptions = {},\n  ): Promise<void>",
+      "unpin(\n    channelId: string,\n    messageId: string,\n    options: OperationOptions = {},\n  ): Promise<void>",
+      "async *history(\n    channelId: string,\n    options: OperationOptions & { limit?: number; before?: string } = {},\n  ): AsyncGenerator<Message>"
+    ]
+  },
+  {
+    "module": "messages",
+    "name": "multipart",
+    "kind": "value",
+    "type": "(body: { content?: string | null; embeds?: { url?: string | null; title?: string | null; color?: number | null; timestamp?: string | number | null; description?: string | null; author?: { name: string; url?: string | null; icon_url?: string | null; } | null; image?: { url: string; description?: string | null; } | null; thumbnail?: { url: string; description?: string | null; } | null; footer?: { text: string; icon_url?: string | null; } | null; fields?: { name: string; value: string; inline?: boolean; }[] | null; }[]; attachments?: ({ title?: string | null; description?: string | null; flags?: number; duration?: number | null; waveform?: string | null; id: number; filename: string; content_type: string; upload_filename: string; file_size: number; } | { title?: string | null; description?: string | null; flags?: number; duration?: number | null; waveform?: string | null; id: number; filename: string; content_type?: string; })[]; message_reference?: { message_id: string | number; channel_id?: string | number; guild_id?: string | number; type?: 0 | 1; attachment_ids?: (string | number)[]; embed_indices?: number[]; } | null; allowed_mentions?: { parse?: (\"users\" | \"roles\" | \"everyone\")[]; users?: (string | number)[]; roles?: (string | number)[]; replied_user?: boolean; } | null; flags?: number; nonce?: string | number; favorite_meme_id?: string | number | null; sticker_ids?: (string | number)[] | null; tts?: boolean; } | { content?: string | null; embeds?: { url?: string | null; title?: string | null; color?: number | null; timestamp?: string | number | null; description?: string | null; author?: { name: string; url?: string | null; icon_url?: string | null; } | null; image?: { url: string; description?: string | null; } | null; thumbnail?: { url: string; description?: string | null; } | null; footer?: { text: string; icon_url?: string | null; } | null; fields?: { name: string; value: string; inline?: boolean; }[] | null; }[]; allowed_mentions?: { parse?: (\"users\" | \"roles\" | \"everyone\")[]; users?: (string | number)[]; roles?: (string | number)[]; replied_user?: boolean; } | null; flags?: number; attachments?: ({ title?: string | null; description?: string | null; flags?: number; duration?: number | null; waveform?: string | null; id: number; filename: string; content_type: string; upload_filename: string; file_size: number; } | { title?: string | null; description?: string | null; flags?: number; duration?: number | null; waveform?: string | null; id?: string | number; filename?: string; })[]; message_snapshots?: { attachments?: { id: string | number; title?: string | null; description?: string | null; }[]; }[]; }, files: readonly FileAttachment[]) => FormData"
+  },
+  {
+    "module": "messages",
+    "name": "PinnedMessagesPage",
+    "kind": "type",
+    "declaration": "export interface PinnedMessagesPage {\n  items: { message: Message; pinnedAt: string }[];\n  hasMore: boolean;\n}"
+  },
+  {
+    "module": "messages",
+    "name": "SendOptions",
+    "kind": "type",
+    "declaration": "export interface SendOptions extends OperationOptions {\n  files?: readonly FileAttachment[];\n}"
+  },
+  {
+    "module": "node",
+    "name": "IPCRateLimitStore",
+    "kind": "class",
+    "members": [
+      "constructor(\n    private readonly port: MessagePort,\n    private readonly maxPending = 1000,\n  )",
+      "readonly close = (): void => {\n    if (this.closed) return;\n    this.closed = true;\n    this.port.off(\"message\", this.receive);\n    this.port.off(\"close\", this.close);\n    for (const waiter of this.pending.values()) {\n      waiter.cleanup();\n      waiter.reject(new Error(\"Rate limit coordinator closed\"));\n    }\n    this.pending.clear();\n  };",
+      "reserve(key: string, signal: AbortSignal): Promise<void>",
+      "observe(key: string, headers: Headers): Promise<void>",
+      "penalize(key: string, retryMs: number, global: boolean): Promise<void>"
+    ]
+  },
+  {
+    "module": "node",
+    "name": "nodeWorkerFactory",
+    "kind": "value",
+    "type": "(module: URL, options?: { workerData?: unknown; execArgv?: string[]; transferList?: Transferable[]; }) => (id: number, context: { signal: AbortSignal; }) => Promise<SupervisedWorker>"
+  },
+  {
+    "module": "node",
+    "name": "serveRateLimits",
+    "kind": "value",
+    "type": "(port: MessagePort, store: RateLimitStore, maxPending?: number) => () => void"
+  },
+  {
+    "module": "permissions",
+    "name": "canDeleteRole",
+    "kind": "value",
+    "type": "(input: { guildId: string; ownerId: string; member: Member; roles: readonly Role[]; target: Role; }) => boolean"
+  },
+  {
+    "module": "permissions",
+    "name": "canManageRole",
+    "kind": "value",
+    "type": "(input: { guildId: string; ownerId: string; member: Member; roles: readonly Role[]; target: Role; }) => boolean"
+  },
+  {
+    "module": "permissions",
+    "name": "compareRoles",
+    "kind": "value",
+    "type": "(a: Pick<Role, \"id\" | \"position\">, b: Pick<Role, \"id\" | \"position\">) => number"
+  },
+  {
+    "module": "permissions",
+    "name": "highestRole",
+    "kind": "value",
+    "type": "(member: Pick<Member, \"roles\">, roles: readonly Role[]) => Role | undefined"
+  },
+  {
+    "module": "permissions",
+    "name": "isTimedOut",
+    "kind": "value",
+    "type": "(member: Pick<Member, \"communication_disabled_until\">, now?: number) => boolean"
+  },
+  {
+    "module": "permissions",
+    "name": "PermissionFlags",
+    "kind": "value",
+    "type": "{ readonly CREATE_INSTANT_INVITE: bigint; readonly KICK_MEMBERS: bigint; readonly BAN_MEMBERS: bigint; readonly ADMINISTRATOR: bigint; readonly MANAGE_CHANNELS: bigint; readonly MANAGE_GUILD: bigint; readonly ADD_REACTIONS: bigint; readonly VIEW_AUDIT_LOG: bigint; readonly PRIORITY_SPEAKER: bigint; readonly STREAM: bigint; readonly VIEW_CHANNEL: bigint; readonly SEND_MESSAGES: bigint; readonly SEND_TTS_MESSAGES: bigint; readonly MANAGE_MESSAGES: bigint; readonly EMBED_LINKS: bigint; readonly ATTACH_FILES: bigint; readonly READ_MESSAGE_HISTORY: bigint; readonly MENTION_EVERYONE: bigint; readonly USE_EXTERNAL_EMOJIS: bigint; readonly CONNECT: bigint; readonly SPEAK: bigint; readonly MUTE_MEMBERS: bigint; readonly DEAFEN_MEMBERS: bigint; readonly MOVE_MEMBERS: bigint; readonly USE_VAD: bigint; readonly CHANGE_NICKNAME: bigint; readonly MANAGE_NICKNAMES: bigint; readonly MANAGE_ROLES: bigint; readonly MANAGE_WEBHOOKS: bigint; readonly MANAGE_EXPRESSIONS: bigint; readonly USE_EXTERNAL_STICKERS: bigint; readonly MODERATE_MEMBERS: bigint; readonly CREATE_EXPRESSIONS: bigint; readonly PIN_MESSAGES: bigint; readonly BYPASS_SLOWMODE: bigint; readonly UPDATE_RTC_REGION: bigint; readonly VIEW_CHANNEL_MEMBERS: bigint; }"
+  },
+  {
+    "module": "permissions",
+    "name": "PermissionResolvable",
+    "kind": "type",
+    "declaration": "export type PermissionResolvable = bigint | string | number | Permissions;"
+  },
+  {
+    "module": "permissions",
+    "name": "Permissions",
+    "kind": "class",
+    "members": [
+      "readonly bitfield: bigint;",
+      "constructor(value: PermissionResolvable = 0n)",
+      "has(value: PermissionResolvable, administrator = false): boolean",
+      "missing(value: PermissionResolvable): Permissions",
+      "add(...values: PermissionResolvable[]): Permissions",
+      "remove(...values: PermissionResolvable[]): Permissions",
+      "toRequest(): string",
+      "toJSON(): string",
+      "names(): (keyof typeof PermissionFlags)[]"
+    ]
+  },
+  {
+    "module": "permissions",
+    "name": "permissionsFor",
+    "kind": "value",
+    "type": "(input: { guildId: string; ownerId: string; member: Member | null; roles: readonly Role[]; overwrites?: readonly { id: string; type: 0 | 1; allow: string; deny: string; }[]; }) => Permissions"
+  },
+  {
+    "module": "rate-limits",
+    "name": "MemoryRateLimitStore",
+    "kind": "class",
+    "members": [
+      "constructor(maxBuckets = 1000)",
+      "async reserve(key: string, signal: AbortSignal): Promise<void>",
+      "observe(key: string, headers: Headers): void",
+      "penalize(key: string, retryMs: number, global: boolean): void"
+    ]
+  },
+  {
+    "module": "rate-limits",
+    "name": "RateLimitStore",
+    "kind": "type",
+    "declaration": "export interface RateLimitStore {\n  reserve(key: string, signal: AbortSignal): Promise<void>;\n  observe(key: string, headers: Headers): void | Promise<void>;\n  penalize(key: string, retryMs: number, global: boolean): void | Promise<void>;\n}"
+  },
+  {
+    "module": "resources",
+    "name": "Channel",
+    "kind": "class",
+    "members": [
+      "constructor(\n    data: S[\"ChannelResponse\"],\n    private readonly hub: Resources,\n  )",
+      "get id(): string",
+      "get guildId(): string | null",
+      "get type(): number",
+      "get name(): string | null",
+      "get guild(): Guild | undefined",
+      "send(input: MessageInput, options?: SendOptions): Promise<Message>",
+      "messages(\n    query?: Parameters<Messages[\"list\"]>[1],\n    options?: ResourceOptions,\n  ): Promise<Message[]>",
+      "history(\n    options?: Parameters<Messages[\"history\"]>[1],\n  ): AsyncGenerator<Message>",
+      "pins(\n    query: NonNullable<\n      RequestOptions<\"GET\", \"/channels/{channel_id}/messages/pins\">[\"query\"]\n    > = {},\n    options: ResourceOptions = {},\n  ): Promise<PinnedMessagesPage>",
+      "bulkDelete(\n    messageIds: readonly string[],\n    options: ResourceOptions = {},\n  ): Promise<void>",
+      "async webhooks(options: ResourceOptions = {}): Promise<Webhook[]>",
+      "fetch(options?: ResourceOptions): Promise<Channel>",
+      "async edit(\n    body: S[\"ChannelUpdateRequestBody\"],\n    options: ResourceOptions = {},\n  ): Promise<Channel>",
+      "async delete(options: ResourceOptions = {}): Promise<void>",
+      "typing(options: ResourceOptions = {}): Promise<void>",
+      "permissionsFor(\n    member: GuildMember,\n    roles: readonly Role[],\n    ownerId: string,\n  ): Permissions",
+      "setOverwrite(\n    id: string,\n    body: S[\"PermissionOverwriteCreateRequest\"],\n    options: ResourceOptions = {},\n  ): Promise<void>",
+      "deleteOverwrite(id: string, options: ResourceOptions = {}): Promise<void>",
+      "createInvite(\n    body: S[\"ChannelInviteCreateRequest\"] = {},\n    options: ResourceOptions = {},\n  ): Promise<S[\"InviteMetadataResponseSchema\"]>",
+      "invites(\n    options: ResourceOptions = {},\n  ): Promise<S[\"InviteMetadataListResponse\"]>",
+      "async createWebhook(\n    body: S[\"WebhookCreateRequest\"],\n    options: ResourceOptions = {},\n  ): Promise<Webhook>"
+    ]
+  },
+  {
+    "module": "resources",
+    "name": "Channels",
+    "kind": "class",
+    "members": [
+      "readonly cache: LRUCache<string, Channel>;",
+      "constructor(\n    private readonly hub: Resources,\n    options: ResourceCacheOptions,\n  )",
+      "wrap(data: S[\"ChannelResponse\"]): Channel",
+      "async fetch(id: string, options: ResourceOptions = {}): Promise<Channel>"
+    ]
+  },
+  {
+    "module": "resources",
+    "name": "Guild",
+    "kind": "class",
+    "members": [
+      "constructor(\n    data: S[\"GuildResponse\"],\n    private readonly hub: Resources,\n  )",
+      "get id(): string",
+      "get name(): string",
+      "get ownerId(): string",
+      "get roles(): Roles",
+      "get members(): Members",
+      "fetch(options?: ResourceOptions): Promise<Guild>",
+      "async channels(options: ResourceOptions = {}): Promise<Channel[]>",
+      "async createChannel(\n    body: S[\"ChannelCreateRequest\"],\n    options: ResourceOptions = {},\n  ): Promise<Channel>",
+      "async edit(\n    body: S[\"GuildUpdateRequest\"],\n    options: ResourceOptions = {},\n  ): Promise<Guild>",
+      "permissionsFor(member: GuildMember, roles: readonly Role[]): Permissions",
+      "ban(\n    userId: string,\n    body: S[\"GuildBanCreateRequest\"] = {},\n    options: ResourceOptions = {},\n  ): Promise<void>",
+      "unban(userId: string, options: ResourceOptions = {}): Promise<void>",
+      "bans(options: ResourceOptions = {}): Promise<S[\"GuildBanListResponse\"]>",
+      "auditLogs(\n    query: NonNullable<\n      RequestOptions<\"GET\", \"/guilds/{guild_id}/audit-logs\">[\"query\"]\n    > = {},\n    options: ResourceOptions = {},\n  ): Promise<S[\"GuildAuditLogListResponse\"]>",
+      "emojis(\n    options: ResourceOptions = {},\n  ): Promise<S[\"GuildEmojiWithUserListResponse\"]>",
+      "stickers(\n    options: ResourceOptions = {},\n  ): Promise<S[\"GuildStickerWithUserListResponse\"]>",
+      "invites(\n    options: ResourceOptions = {},\n  ): Promise<S[\"InviteMetadataListResponse\"]>"
+    ]
+  },
+  {
+    "module": "resources",
+    "name": "GuildMember",
+    "kind": "class",
+    "members": [
+      "constructor(\n    readonly guildId: string,\n    data: S[\"GuildMemberResponse\"],\n    private readonly hub: Resources,\n  )",
+      "get id(): string",
+      "get user(): UserResource",
+      "get displayName(): string",
+      "fetch(options?: ResourceOptions): Promise<GuildMember>",
+      "async edit(\n    body: S[\"GuildMemberUpdateRequest\"],\n    options: ResourceOptions = {},\n  ): Promise<GuildMember>",
+      "async kick(options: ResourceOptions = {}): Promise<void>",
+      "addRole(roleId: string, options: ResourceOptions = {}): Promise<void>",
+      "removeRole(roleId: string, options: ResourceOptions = {}): Promise<void>",
+      "timeout(\n    until: Date | null,\n    options: ResourceOptions = {},\n  ): Promise<GuildMember>"
+    ]
+  },
+  {
+    "module": "resources",
+    "name": "Guilds",
+    "kind": "class",
+    "members": [
+      "readonly cache: LRUCache<string, Guild>;",
+      "constructor(\n    private readonly hub: Resources,\n    options: ResourceCacheOptions,\n  )",
+      "wrap(data: S[\"GuildResponse\"]): Guild",
+      "async fetch(id: string, options: ResourceOptions = {}): Promise<Guild>",
+      "async list(options: ResourceOptions = {}): Promise<Guild[]>"
+    ]
+  },
+  {
+    "module": "resources",
+    "name": "Invites",
+    "kind": "class",
+    "members": [
+      "constructor(private readonly hub: Resources)",
+      "fetch(\n    code: string,\n    options: ResourceOptions = {},\n  ): Promise<S[\"InviteResponseSchema\"]>",
+      "delete(code: string, options: ResourceOptions = {}): Promise<void>"
+    ]
+  },
+  {
+    "module": "resources",
+    "name": "Members",
+    "kind": "class",
+    "members": [
+      "constructor(\n    private readonly hub: Resources,\n    readonly guildId: string,\n  )",
+      "async fetch(id: string, options: ResourceOptions = {}): Promise<GuildMember>",
+      "async list(\n    query: { limit?: number; after?: string } = {},\n    options: ResourceOptions = {},\n  ): Promise<GuildMember[]>",
+      "async *iterate(\n    options: ResourceOptions & { limit?: number } = {},\n  ): AsyncGenerator<GuildMember>"
+    ]
+  },
+  {
+    "module": "resources",
+    "name": "ResourceCacheOptions",
+    "kind": "type",
+    "declaration": "export interface ResourceCacheOptions {\n  users?: number;\n  channels?: number;\n  guilds?: number;\n  members?: number;\n  roles?: number;\n  ttlMs?: number;\n}"
+  },
+  {
+    "module": "resources",
+    "name": "ResourceOptions",
+    "kind": "type",
+    "declaration": "export interface ResourceOptions extends OperationOptions {}"
+  },
+  {
+    "module": "resources",
+    "name": "Resources",
+    "kind": "class",
+    "members": [
+      "readonly users: Users;",
+      "readonly channels: Channels;",
+      "readonly guilds: Guilds;",
+      "readonly invites: Invites;",
+      "readonly webhooks: Webhooks;",
+      "readonly messages: Messages;",
+      "readonly memberCache: LRUCache<string, GuildMember>;",
+      "readonly roleCache: LRUCache<string, Role>;",
+      "get rest(): RESTClient",
+      "constructor(\n    private readonly getREST: () => RESTClient,\n    options: ResourceCacheOptions = {},\n  )",
+      "wrapMember(guildId: string, data: S[\"GuildMemberResponse\"]): GuildMember",
+      "wrapRole(guildId: string, data: S[\"GuildRoleResponse\"]): Role",
+      "clear(): void",
+      "apply(event: KnownDispatch): void"
+    ]
+  },
+  {
+    "module": "resources",
+    "name": "Role",
+    "kind": "class",
+    "members": [
+      "constructor(\n    readonly guildId: string,\n    data: S[\"GuildRoleResponse\"],\n    private readonly hub: Resources,\n  )",
+      "get id(): string",
+      "get name(): string",
+      "get permissions(): Permissions",
+      "async edit(\n    body: S[\"GuildRoleUpdateRequest\"],\n    options: ResourceOptions = {},\n  ): Promise<Role>",
+      "async delete(options: ResourceOptions = {}): Promise<void>"
+    ]
+  },
+  {
+    "module": "resources",
+    "name": "Roles",
+    "kind": "class",
+    "members": [
+      "constructor(\n    private readonly hub: Resources,\n    readonly guildId: string,\n  )",
+      "async list(options: ResourceOptions = {}): Promise<Role[]>",
+      "async create(\n    body: S[\"GuildRoleCreateRequest\"],\n    options: ResourceOptions = {},\n  ): Promise<Role>",
+      "setPositions(\n    body: S[\"GuildRolePositionsRequest\"],\n    options: ResourceOptions = {},\n  ): Promise<void>"
+    ]
+  },
+  {
+    "module": "resources",
+    "name": "UserResource",
+    "kind": "class",
+    "members": [
+      "constructor(\n    data: S[\"UserPartialResponse\"],\n    private readonly hub: Resources,\n  )",
+      "get id(): string",
+      "get username(): string",
+      "async createDM(options: ResourceOptions = {}): Promise<Channel>",
+      "async send(input: MessageInput, options: SendOptions = {}): Promise<Message>",
+      "fetch(options?: ResourceOptions): Promise<UserResource>"
+    ]
+  },
+  {
+    "module": "resources",
+    "name": "Users",
+    "kind": "class",
+    "members": [
+      "readonly cache: LRUCache<string, UserResource>;",
+      "constructor(\n    private readonly hub: Resources,\n    options: ResourceCacheOptions,\n  )",
+      "wrap(data: S[\"UserPartialResponse\"]): UserResource",
+      "async fetch(\n    id: string,\n    options: ResourceOptions = {},\n  ): Promise<UserResource>"
+    ]
+  },
+  {
+    "module": "resources",
+    "name": "Webhook",
+    "kind": "class",
+    "members": [
+      "constructor(\n    data: S[\"WebhookResponse\"],\n    private readonly hub: Resources,\n  )",
+      "get id(): string",
+      "execute(\n    body: S[\"WebhookMessageRequest\"],\n    options: SendOptions = {},\n  ): Promise<Message>",
+      "async fetchMessage(\n    messageId: string,\n    options: ResourceOptions = {},\n  ): Promise<Message>",
+      "async editMessage(\n    messageId: string,\n    body: S[\"WebhookMessageEditRequest\"],\n    options: SendOptions = {},\n  ): Promise<Message>",
+      "deleteMessage(\n    messageId: string,\n    options: ResourceOptions = {},\n  ): Promise<void>",
+      "async edit(\n    body: S[\"WebhookUpdateRequest\"],\n    options: ResourceOptions = {},\n  ): Promise<Webhook>",
+      "delete(options: ResourceOptions = {}): Promise<void>"
+    ]
+  },
+  {
+    "module": "resources",
+    "name": "Webhooks",
+    "kind": "class",
+    "members": [
+      "constructor(private readonly hub: Resources)",
+      "async fetch(id: string, options: ResourceOptions = {}): Promise<Webhook>",
+      "async execute(\n    id: string,\n    token: string,\n    body: S[\"WebhookMessageRequest\"],\n    options: SendOptions = {},\n  ): Promise<Message>"
+    ]
+  },
+  {
+    "module": "rest",
+    "name": "FluxerAPIError",
+    "kind": "value",
+    "type": "typeof FluxerAPIError"
+  },
+  {
+    "module": "rest",
+    "name": "Method",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "rest",
+    "name": "PathsFor",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "rest",
+    "name": "RequestOptions",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "rest",
+    "name": "RequestQueueFullError",
+    "kind": "value",
+    "type": "typeof RequestQueueFullError"
+  },
+  {
+    "module": "rest",
+    "name": "ResponseData",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "rest",
+    "name": "RESTClient",
+    "kind": "class",
+    "members": [
+      "get stats(): { pending: number; active: number; waiting: number }",
+      "constructor(private readonly options: RESTOptions)",
+      "updateToken(token: string): void",
+      "async request<M extends Method, P extends PathsFor<M>>(\n    method: M,\n    route: P,\n    ...args: RequestArgs<M, P>\n  ): Promise<ResponseData<M, P>>"
+    ]
+  },
+  {
+    "module": "rest",
+    "name": "RESTDiagnostic",
+    "kind": "type",
+    "declaration": "export interface RESTDiagnostic {\n  type: \"response\" | \"retry\" | \"rateLimit\";\n  method: Method;\n  /** Template path; never includes tokens or query values. */\n  route: string;\n  attempt: number;\n  status?: number;\n  delayMs?: number;\n  global?: boolean;\n  durationMs?: number;\n}"
+  },
+  {
+    "module": "rest",
+    "name": "RESTOptions",
+    "kind": "type",
+    "declaration": "export interface RESTOptions {\n  /** Advertised api_public endpoint, including any path prefix, without /v1. */\n  api: string;\n  /** Instance origin for the unversioned discovery operation. */\n  origin?: string;\n  token?: string;\n  authScheme?: \"Bot\" | \"Bearer\" | \"Session\" | \"Admin\";\n  fetch?: typeof globalThis.fetch;\n  locale?: string;\n  timeoutMs?: number;\n  maxRetries?: number;\n  maxBuckets?: number;\n  rateLimitStore?: RateLimitStore;\n  maxConcurrentRequests?: number;\n  /** Total accepted requests, including route queues, rate waits, and active work. */\n  maxPendingRequests?: number;\n  onDiagnostic?: (event: RESTDiagnostic) => void;\n}"
+  },
+  {
+    "module": "shards",
+    "name": "IdentifyLimiter",
+    "kind": "class",
+    "members": [
+      "constructor(\n    readonly limit = 250,\n    readonly windowMs = 60000,\n  )",
+      "async acquire(signal: AbortSignal): Promise<void>"
+    ]
+  },
+  {
+    "module": "shards",
+    "name": "ShardManager",
+    "kind": "class",
+    "members": [
+      "get shards(): readonly Client[]",
+      "constructor(private readonly options: ShardManagerOptions)",
+      "async connect(\n    options: { signal?: AbortSignal; timeoutMs?: number } = {},\n  ): Promise<readonly Client[]>",
+      "disconnect(): void"
+    ]
+  },
+  {
+    "module": "shards",
+    "name": "ShardManagerOptions",
+    "kind": "type",
+    "declaration": "export interface ShardManagerOptions extends Omit<ClientOptions, \"gateway\"> {\n  gateway?: Omit<NonNullable<ClientOptions[\"gateway\"]>, \"shard\">;\n  count?: number;\n  /** Share across managers using the same source IP; distributed backends can implement acquire. */\n  identifyLimiter?: { acquire(signal: AbortSignal): Promise<void> };\n  /** External worker/process implementations can supply an alternate Client factory. */\n  createClient?: (options: ClientOptions) => Client;\n}"
+  },
+  {
+    "module": "supervisor",
+    "name": "SupervisedWorker",
+    "kind": "type",
+    "declaration": "export interface SupervisedWorker {\n  ready: Promise<void>;\n  closed: Promise<{ code: number | null }>;\n  stop(): Promise<void> | void;\n}"
+  },
+  {
+    "module": "supervisor",
+    "name": "SupervisorOptions",
+    "kind": "type",
+    "declaration": "export interface SupervisorOptions {\n  count: number;\n  /** Adapter owns process/worker creation and IPC; it must stop when signal aborts. */\n  spawn(\n    id: number,\n    context: { signal: AbortSignal },\n  ): Promise<SupervisedWorker>;\n  maxRestarts?: number;\n  restartBaseMs?: number;\n  startupTimeoutMs?: number;\n}"
+  },
+  {
+    "module": "supervisor",
+    "name": "WorkerSupervisor",
+    "kind": "class",
+    "members": [
+      "constructor(private readonly options: SupervisorOptions)",
+      "async start(): Promise<void>",
+      "stop(): Promise<void>"
+    ]
+  },
+  {
+    "module": "types",
+    "name": "components",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "types",
+    "name": "GatewayDispatch",
+    "kind": "type",
+    "declaration": "export interface GatewayDispatch {\n  op: 0;\n  t: string;\n  s: number;\n  d: unknown;\n}"
+  },
+  {
+    "module": "types",
+    "name": "MessageCreate",
+    "kind": "type",
+    "declaration": "export type MessageCreate = components[\"schemas\"][\"MessageRequestSchema\"];"
+  },
+  {
+    "module": "types",
+    "name": "MessageData",
+    "kind": "type",
+    "declaration": "export type MessageData = components[\"schemas\"][\"MessageResponseSchema\"] & {\n  guild_id?: string;\n};"
+  },
+  {
+    "module": "types",
+    "name": "MessageEdit",
+    "kind": "type",
+    "declaration": "export type MessageEdit = components[\"schemas\"][\"MessageUpdateRequestSchema\"];"
+  },
+  {
+    "module": "types",
+    "name": "Method",
+    "kind": "type",
+    "declaration": "export type Method =\n  | \"GET\"\n  | \"POST\"\n  | \"PUT\"\n  | \"PATCH\"\n  | \"DELETE\"\n  | \"HEAD\"\n  | \"OPTIONS\";"
+  },
+  {
+    "module": "types",
+    "name": "OperationOptions",
+    "kind": "type",
+    "declaration": "export interface OperationOptions {\n  signal?: AbortSignal;\n  timeoutMs?: number;\n  reason?: string;\n}"
+  },
+  {
+    "module": "types",
+    "name": "operations",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "types",
+    "name": "paths",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "types",
+    "name": "PathsFor",
+    "kind": "type",
+    "declaration": "export type PathsFor<M extends Method> = {\n  [P in keyof paths]: Lowercase<M> extends keyof paths[P]\n    ? NonNullable<paths[P][Lowercase<M>]> extends never\n      ? never\n      : P\n    : never;\n}[keyof paths];"
+  },
+  {
+    "module": "types",
+    "name": "ReadyData",
+    "kind": "type",
+    "declaration": "export type ReadyData =\n  import(\"./generated/gateway.js\").DispatchEvents[\"READY\"];"
+  },
+  {
+    "module": "types",
+    "name": "RequestArgs",
+    "kind": "type",
+    "declaration": "export type RequestArgs<M extends Method, P extends PathsFor<M>> = [\n  RequiredKeys<RequestOptions<M, P>>,\n] extends [never]\n  ? [options?: RequestOptions<M, P>]\n  : [options: RequestOptions<M, P>];"
+  },
+  {
+    "module": "types",
+    "name": "RequestOptions",
+    "kind": "type",
+    "declaration": "export type RequestOptions<\n  M extends Method,\n  P extends PathsFor<M>,\n> = ParameterOption<Operation<M, P>, \"path\", \"params\"> &\n  ParameterOption<Operation<M, P>, \"query\", \"query\"> &\n  BodyOption<Operation<M, P>> &\n  OperationOptions & {\n    headers?: HeadersInit;\n    /** Overrides the schema's default authentication policy. */\n    auth?: boolean;\n  };"
+  },
+  {
+    "module": "types",
+    "name": "ResponseData",
+    "kind": "type",
+    "declaration": "export type ResponseData<M extends Method, P extends PathsFor<M>> =\n  Operation<M, P> extends { responses: infer R }\n    ? {\n        [K in keyof R]: `${K & (string | number)}` extends `2${string}`\n          ? ResponseContent<R[K]>\n          : never;\n      }[keyof R]\n    : never;"
+  },
+  {
+    "module": "types",
+    "name": "User",
+    "kind": "type",
+    "declaration": "export type User = components[\"schemas\"][\"UserPartialResponse\"];"
+  },
+  {
+    "module": "uploads",
+    "name": "UploadError",
+    "kind": "class",
+    "members": [
+      "constructor(\n    message: string,\n    readonly status?: number,\n  )"
+    ]
+  },
+  {
+    "module": "uploads",
+    "name": "UploadOptions",
+    "kind": "type",
+    "declaration": "export interface UploadOptions {\n  signal?: AbortSignal;\n  timeoutMs?: number;\n  onProgress?: (progress: {\n    completedBytes: number;\n    totalBytes: number;\n  }) => void;\n}"
+  },
+  {
+    "module": "uploads",
+    "name": "Uploads",
+    "kind": "class",
+    "members": [
+      "constructor(\n    private readonly rest: RESTClient,\n    private readonly options: {\n      fetch?: typeof globalThis.fetch;\n      concurrency?: number;\n    } = {},\n  )",
+      "async upload(\n    channelId: string,\n    files: readonly FileAttachment[],\n    options: UploadOptions = {},\n  ): Promise<components[\"schemas\"][\"ClientUploadedAttachmentRequest\"][]>"
+    ]
+  },
+  {
+    "module": "voice-livekit",
+    "name": "liveKitAdapter",
+    "kind": "value",
+    "type": "(createRoom: () => LiveKitRoom, options?: LiveKitAdapterOptions) => VoiceAdapter"
+  },
+  {
+    "module": "voice-livekit",
+    "name": "LiveKitAdapterOptions",
+    "kind": "type",
+    "declaration": "export interface LiveKitAdapterOptions {\n  /** A new encrypted room/provider/worker per attempt. Never reuse rooms or keys. */\n  encryption?: () => LiveKitEncryption;\n  /** Automatically attach remote audio here. Omit to consume tracks yourself. */\n  audioOutput?: HTMLElement;\n}"
+  },
+  {
+    "module": "voice-livekit",
+    "name": "LiveKitEncryption",
+    "kind": "type",
+    "declaration": "export interface LiveKitEncryption {\n  /** A fresh Room constructed with this key provider and an E2EE worker. */\n  room: LiveKitRoom;\n  keyProvider: { setKey(key: string): Promise<void> };\n  /** Release the worker and application-owned encryption resources. */\n  dispose(): Promise<void> | void;\n}"
+  },
+  {
+    "module": "voice-livekit",
+    "name": "LiveKitRoom",
+    "kind": "type",
+    "declaration": "export interface LiveKitRoom {\n  connect(url: string, token: string): Promise<void>;\n  disconnect(): Promise<void> | void;\n  localParticipant: {\n    setMicrophoneEnabled(enabled: boolean): Promise<unknown>;\n    // LiveKit's source is a string enum. Keep its options at this library boundary.\n    publishTrack?(\n      track: MediaStreamTrack,\n      options?: any,\n    ): Promise<{ trackSid: string }>;\n    unpublishTrack?(\n      track: MediaStreamTrack,\n      stopOnUnpublish?: boolean,\n    ): Promise<unknown>;\n  };\n  remoteParticipants?: ReadonlyMap<string, Participant>;\n  on?(event: RoomEvent, listener: (...args: any[]) => void): unknown;\n  off?(event: RoomEvent, listener: (...args: any[]) => void): unknown;\n  startAudio?(): Promise<void>;\n  setE2EEEnabled?(enabled: boolean): Promise<void>;\n  readonly isE2EEEnabled?: boolean;\n}"
+  },
+  {
+    "module": "voice-player",
+    "name": "VoiceAudioSource",
+    "kind": "type",
+    "declaration": "export type VoiceAudioSource = string | URL | Blob | ArrayBuffer | AudioBuffer;"
+  },
+  {
+    "module": "voice-player",
+    "name": "VoicePlayer",
+    "kind": "class",
+    "members": [
+      "constructor(\n    private readonly voice: AudioConnection,\n    private readonly options: VoicePlayerOptions = {},\n  )",
+      "get state(): PlayerEvents[\"state\"]",
+      "play(source: VoiceAudioSource, options: PlayOptions = {}): Promise<void>",
+      "disconnect(): Promise<void>"
+    ]
+  },
+  {
+    "module": "voice-player",
+    "name": "VoicePlayerOptions",
+    "kind": "type",
+    "declaration": "export interface VoicePlayerOptions {\n  /** A fresh context per item. Defaults to the browser's AudioContext. */\n  createAudioContext?: () => AudioContext;\n  fetch?: typeof globalThis.fetch;\n}"
+  },
+  {
+    "module": "voice-session",
+    "name": "VoiceRecoveryOptions",
+    "kind": "type",
+    "declaration": "export interface VoiceRecoveryOptions {\n  /** Total rejoin budget for this session, including repeated media failures. Default 5. */\n  maxAttempts?: number;\n  baseDelayMs?: number;\n  maxDelayMs?: number;\n  /** Deadline for waiting for a ready gateway before each rejoin. Default 30 seconds. */\n  gatewayTimeoutMs?: number;\n}"
+  },
+  {
+    "module": "voice-session",
+    "name": "VoiceSession",
+    "kind": "class",
+    "members": [
+      "static async join(\n    gateway: GatewayClient,\n    adapter: VoiceAdapter,\n    options: VoiceSessionOptions,\n  ): Promise<VoiceSession>",
+      "get state(): VoiceSessionEvents[\"state\"]",
+      "get connection(): VoiceConnection | undefined",
+      "get audioTracks(): readonly VoiceAudioTrack[]",
+      "async setMuted(muted: boolean): Promise<void>",
+      "async setDeafened(deafened: boolean): Promise<void>",
+      "startAudio(): Promise<void>",
+      "publishAudio(track: MediaStreamTrack): Promise<VoicePublication>",
+      "disconnect(): Promise<void>",
+      "toJSON(): {\n    guildId: string | null;\n    channelId: string;\n    connectionId: string | undefined;\n    state: VoiceSessionEvents[\"state\"];\n    attempts: number;\n  }"
+    ]
+  },
+  {
+    "module": "voice-session",
+    "name": "VoiceSessionEvents",
+    "kind": "type",
+    "declaration": "export interface VoiceSessionEvents {\n  state: \"connected\" | \"reconnecting\" | \"disconnected\";\n  connection: VoiceConnection;\n  retry: { attempt: number; reason: VoiceCloseReason };\n  audioTrack: VoiceAudioTrack;\n  audioTrackRemoved: VoiceAudioTrack;\n  speakers: readonly string[];\n  error: unknown;\n}"
+  },
+  {
+    "module": "voice-session",
+    "name": "VoiceSessionOptions",
+    "kind": "type",
+    "declaration": "export interface VoiceSessionOptions extends VoiceJoinOptions {\n  recovery?: VoiceRecoveryOptions;\n}"
+  },
+  {
+    "module": "voice",
+    "name": "liveKitAdapter",
+    "kind": "value",
+    "type": "(createRoom: () => LiveKitRoom, options?: LiveKitAdapterOptions) => VoiceAdapter"
+  },
+  {
+    "module": "voice",
+    "name": "LiveKitAdapterOptions",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "voice",
+    "name": "LiveKitEncryption",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "voice",
+    "name": "LiveKitRoom",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "voice",
+    "name": "VoiceAdapter",
+    "kind": "type",
+    "declaration": "export interface VoiceAdapter {\n  /** Media tokens and E2EE material are private capabilities. Do not log the grant. */\n  connect(\n    grant: DispatchEvents[\"VOICE_SERVER_UPDATE\"],\n    context: { signal: AbortSignal; selfMute?: boolean; selfDeaf?: boolean },\n  ): Promise<VoiceTransport>;\n  /** Opt in only if connect configures encryption using the grant's e2ee_key. */\n  supportsE2EE?: boolean;\n}"
+  },
+  {
+    "module": "voice",
+    "name": "VoiceAudioSource",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "voice",
+    "name": "VoiceAudioTrack",
+    "kind": "type",
+    "declaration": "export interface VoiceAudioTrack {\n  id: string;\n  participantId: string;\n  mediaStreamTrack: MediaStreamTrack;\n  attach(element?: HTMLMediaElement): HTMLMediaElement;\n  detach(element?: HTMLMediaElement): HTMLMediaElement[];\n}"
+  },
+  {
+    "module": "voice",
+    "name": "VoiceCloseReason",
+    "kind": "type",
+    "declaration": "export type VoiceCloseReason =\n  | \"manual\"\n  | \"gateway\"\n  | \"voice-state\"\n  | \"grant\"\n  | \"media\";"
+  },
+  {
+    "module": "voice",
+    "name": "VoiceConnection",
+    "kind": "class",
+    "members": [
+      "static async join(\n    gateway: GatewayClient,\n    adapter: VoiceAdapter,\n    options: VoiceJoinOptions,\n  ): Promise<VoiceConnection>",
+      "async setMuted(muted: boolean): Promise<void>",
+      "get audioTracks(): readonly VoiceAudioTrack[]",
+      "get state(): VoiceTransportEvents[\"state\"]",
+      "async startAudio(): Promise<void>",
+      "async publishAudio(track: MediaStreamTrack): Promise<VoicePublication>",
+      "async setDeafened(deafened: boolean): Promise<void>",
+      "disconnect(): Promise<void>",
+      "toJSON(): {\n    guildId: string | null;\n    channelId: string;\n    connectionId: string;\n    active: boolean;\n  }"
+    ]
+  },
+  {
+    "module": "voice",
+    "name": "VoiceConnectionEvents",
+    "kind": "type",
+    "declaration": "export interface VoiceConnectionEvents extends VoiceTransportEvents {\n  closed: VoiceCloseReason;\n}"
+  },
+  {
+    "module": "voice",
+    "name": "VoiceJoinOptions",
+    "kind": "type",
+    "declaration": "export interface VoiceJoinOptions {\n  guildId: string | null;\n  channelId: string;\n  selfMute?: boolean;\n  selfDeaf?: boolean;\n  signal?: AbortSignal;\n  timeoutMs?: number;\n}"
+  },
+  {
+    "module": "voice",
+    "name": "VoiceLifecycleError",
+    "kind": "class",
+    "members": [
+      "constructor(\n    message: string,\n    readonly reason: VoiceCloseReason,\n  )"
+    ]
+  },
+  {
+    "module": "voice",
+    "name": "VoicePlayer",
+    "kind": "value",
+    "type": "typeof VoicePlayer"
+  },
+  {
+    "module": "voice",
+    "name": "VoicePlayerOptions",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "voice",
+    "name": "VoicePublication",
+    "kind": "type",
+    "declaration": "export interface VoicePublication {\n  id: string;\n  /** Unpublish without stopping the caller-owned source track. Idempotent. */\n  stop(): Promise<void>;\n}"
+  },
+  {
+    "module": "voice",
+    "name": "VoiceRecoveryOptions",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "voice",
+    "name": "VoiceSession",
+    "kind": "value",
+    "type": "typeof VoiceSession"
+  },
+  {
+    "module": "voice",
+    "name": "VoiceSessionEvents",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "voice",
+    "name": "VoiceSessionOptions",
+    "kind": "value",
+    "type": "any"
+  },
+  {
+    "module": "voice",
+    "name": "VoiceTransport",
+    "kind": "type",
+    "declaration": "export interface VoiceTransport {\n  disconnect(): Promise<void> | void;\n  setMicrophoneEnabled?(enabled: boolean): Promise<void>;\n  setDeafened?(deafened: boolean): Promise<void>;\n  publishAudio?(track: MediaStreamTrack): Promise<VoicePublication>;\n  startAudio?(): Promise<void>;\n  readonly audioTracks?: readonly VoiceAudioTrack[];\n  readonly state?: VoiceTransportEvents[\"state\"];\n  on?<K extends keyof VoiceTransportEvents>(\n    event: K,\n    listener: (value: VoiceTransportEvents[K]) => unknown,\n  ): () => void;\n}"
+  },
+  {
+    "module": "voice",
+    "name": "VoiceTransportEvents",
+    "kind": "type",
+    "declaration": "export interface VoiceTransportEvents {\n  state: \"connected\" | \"reconnecting\" | \"disconnected\";\n  audioTrack: VoiceAudioTrack;\n  audioTrackRemoved: VoiceAudioTrack;\n  speakers: readonly string[];\n  error: unknown;\n}"
+  }
+]

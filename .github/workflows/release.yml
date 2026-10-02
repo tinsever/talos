@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'tinsever/talos'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run test:coverage
+      - run: bun run smoke:node
+      - name: Run protocol fault tests
+        run: TALOS_SOAK_MS=10000 bun run soak
+      - run: bunx playwright install --with-deps chromium firefox webkit
+      - name: Install virtual audio backend
+        run: sudo apt-get install --no-install-recommends -y pulseaudio pulseaudio-utils gstreamer1.0-plugins-good
+      - name: Run browser tests with virtual audio
+        run: bash scripts/test-browser-audio.sh
+      - name: Validate release version
+        env:
+          TALOS_RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: bun run check:release --tag "$TALOS_RELEASE_TAG"
+      - run: bun pm pack --ignore-scripts
+      - run: bun run check:package
+      - run: bun run check:package:node
+      - name: Publish to npm
+        env:
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
+          NPM_CONFIG_PROVENANCE: true
+          TALOS_DIST_TAG: ${{ github.event.release.prerelease && 'next' || 'latest' }}
+        run: npm publish ./*.tgz --ignore-scripts --access public --tag "$TALOS_DIST_TAG"

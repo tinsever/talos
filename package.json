@@ -1,0 +1,136 @@
+{
+  "name": "talos-fluxer",
+  "version": "0.2.0",
+  "description": "A portable, TypeScript-first Fluxer SDK",
+  "type": "module",
+  "sideEffects": false,
+  "license": "AGPL-3.0-only",
+  "files": [
+    "VOICE.md",
+    "dist",
+    "src",
+    "LICENSE",
+    "NOTICE.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./rest": {
+      "types": "./dist/rest.d.ts",
+      "import": "./dist/rest.js"
+    },
+    "./gateway": {
+      "types": "./dist/gateway.d.ts",
+      "import": "./dist/gateway.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js"
+    },
+    "./resources": {
+      "types": "./dist/resources.d.ts",
+      "import": "./dist/resources.js"
+    },
+    "./permissions": {
+      "types": "./dist/permissions.d.ts",
+      "import": "./dist/permissions.js"
+    },
+    "./uploads": {
+      "types": "./dist/uploads.d.ts",
+      "import": "./dist/uploads.js"
+    },
+    "./shards": {
+      "types": "./dist/shards.d.ts",
+      "import": "./dist/shards.js"
+    },
+    "./voice": {
+      "types": "./dist/voice.d.ts",
+      "import": "./dist/voice.js"
+    },
+    "./rate-limits": {
+      "types": "./dist/rate-limits.d.ts",
+      "import": "./dist/rate-limits.js"
+    },
+    "./gateway-types": {
+      "types": "./dist/gateway-types.d.ts",
+      "import": "./dist/gateway-types.js"
+    },
+    "./supervisor": {
+      "types": "./dist/supervisor.d.ts",
+      "import": "./dist/supervisor.js"
+    },
+    "./collectors": {
+      "types": "./dist/collectors.d.ts",
+      "import": "./dist/collectors.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "bun run --bun tsc -p tsconfig.build.json",
+    "typecheck": "bun run --bun tsc --noEmit",
+    "test": "bun run --bun vitest run",
+    "test:node": "node node_modules/vitest/vitest.mjs run",
+    "bench": "node scripts/benchmark.mjs",
+    "bench:bun": "bun scripts/benchmark.mjs",
+    "test:coverage": "node node_modules/vitest/vitest.mjs run --coverage",
+    "smoke": "bun scripts/smoke.mjs",
+    "smoke:node": "node scripts/smoke.mjs",
+    "smoke:live": "bun scripts/live-smoke.mjs",
+    "generate": "bun scripts/generate.mjs",
+    "check:generated": "bun scripts/generate.mjs --check && bun scripts/generate-gateway.mjs --check",
+    "check": "bun run check:generated && bun run check:api && bun run typecheck && bun run test && bun run build",
+    "prepack": "bun run check",
+    "generate:gateway": "bun scripts/generate-gateway.mjs",
+    "test:live": "bun --env-file=.env scripts/live-bot.mjs",
+    "soak": "bun --expose-gc scripts/soak.mjs",
+    "soak:live": "bun --env-file=.env scripts/soak-live.mjs",
+    "schema:upstream": "bun scripts/schema-upstream.mjs",
+    "api:update": "bun scripts/api-snapshot.mjs --update",
+    "check:api": "bun scripts/api-snapshot.mjs",
+    "smoke:browser": "bun scripts/browser-smoke.mjs",
+    "check:package": "bun scripts/check-package.mjs",
+    "check:package:node": "node scripts/check-package.mjs --npm",
+    "test:browser": "node --test tests/browser/server.test.mjs && playwright test",
+    "check:release": "bun scripts/check-release.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.18.2",
+    "@vitest/coverage-v8": "^4.1.11",
+    "esbuild": "^0.28.2",
+    "openapi-typescript": "^7.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.11",
+    "ws": "^8.22.0"
+  },
+  "packageManager": "bun@1.4.2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tinsever/talos.git"
+  },
+  "homepage": "https://github.com/tinsever/talos",
+  "bugs": {
+    "url": "https://github.com/tinsever/talos/issues"
+  },
+  "author": "tinsever",
+  "keywords": [
+    "fluxer",
+    "sdk",
+    "bot",
+    "typescript",
+    "bun"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

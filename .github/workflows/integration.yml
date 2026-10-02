@@ -1,0 +1,75 @@
+name: Integration
+
+on:
+  workflow_dispatch:
+    inputs:
+      origin:
+        description: Dedicated test instance origin
+        type: string
+        default: https://fluxer.app
+        required: true
+      duration:
+        description: Read-only soak duration in seconds (1–18000)
+        type: number
+        default: 300
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - name: Validate configuration
+        env:
+          TALOS_SOAK_SECONDS: ${{ inputs.duration }}
+          FLUXER_BOT_TOKEN: ${{ secrets.FLUXER_BOT_TOKEN }}
+          FLUXER_TEST_GUILD_ID: ${{ secrets.FLUXER_TEST_GUILD_ID }}
+          FLUXER_TEST_CHANNEL_ID: ${{ secrets.FLUXER_TEST_CHANNEL_ID }}
+        run: |
+          node --input-type=module -e '
+            const duration = Number(process.env.TALOS_SOAK_SECONDS);
+            if (!Number.isInteger(duration) || duration < 1 || duration > 18000)
+              throw new Error("Duration must be 1–18000 seconds");
+            for (const name of ["FLUXER_BOT_TOKEN", "FLUXER_TEST_GUILD_ID", "FLUXER_TEST_CHANNEL_ID"])
+              if (!process.env[name]) throw new Error(`Missing secret: ${name}`);
+          '
+      - name: Run authenticated tests
+        env:
+          FLUXER_ORIGIN: ${{ inputs.origin }}
+          FLUXER_BOT_TOKEN: ${{ secrets.FLUXER_BOT_TOKEN }}
+          FLUXER_TEST_GUILD_ID: ${{ secrets.FLUXER_TEST_GUILD_ID }}
+          FLUXER_TEST_CHANNEL_ID: ${{ secrets.FLUXER_TEST_CHANNEL_ID }}
+        run: bun scripts/live-bot.mjs
+      - name: Run read-only soak
+        env:
+          FLUXER_ORIGIN: ${{ inputs.origin }}
+          FLUXER_BOT_TOKEN: ${{ secrets.FLUXER_BOT_TOKEN }}
+          TALOS_SOAK_SECONDS: ${{ inputs.duration }}
+          TALOS_SOAK_REPORT: .reports/soak.json
+        run: |
+          export TALOS_SOAK_MS=$((TALOS_SOAK_SECONDS * 1000))
+          bun scripts/soak-live.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration
+          path: .reports/
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 14

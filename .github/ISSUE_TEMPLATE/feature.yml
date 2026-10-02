@@ -1,0 +1,16 @@
+name: Feature request
+description: Suggest an API or behavior change.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the task that is difficult or unsupported.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API or behavior
+    validations:
+      required: true

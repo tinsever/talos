@@ -1,0 +1,53 @@
+name: Upstream schema watch
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 7 * * 1'
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: schema-watch
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - name: Update pinned upstream schema
+        run: bun run schema:upstream --update
+      - name: Regenerate REST contracts
+        run: bun run generate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: upstream-contract-report
+          path: .reports/upstream.json
+          include-hidden-files: true
+      # A fixed branch updates the open PR; after it is closed or merged,
+      # the next run with a diff can create a new PR.
+      - name: Create or update schema PR
+        uses: peter-evans/create-pull-request@v8
+        with:
+          branch: automation/upstream-schema
+          base: ${{ github.event.repository.default_branch }}
+          delete-branch: true
+          add-paths: |
+            schema/openapi.json
+            schema/source.json
+            src/generated/api.ts
+            src/generated/routes.ts
+          commit-message: 'chore: update upstream schema and generated contracts'
+          title: 'chore: update upstream schema and generated contracts'
+          body: |
+            Updates the pinned Fluxer OpenAPI schema, source metadata, and generated REST contracts.
+
+            Review the upstream contract report in the [workflow artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+
+            This PR is updated automatically while it remains open. After it is closed or merged, a subsequent run with schema changes can create a new PR.

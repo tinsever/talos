@@ -1,0 +1,6 @@
+{
+  "GET /gateway/bot": {
+    "authenticated": true,
+    "reason": "The documented bot-token form check is not expressed as an OpenAPI security requirement. See https://docs.fluxer.app/http-api/gateway/."
+  }
+}
