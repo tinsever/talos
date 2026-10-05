@@ -78,6 +78,9 @@ export const routes = {
   "POST /auth/passkey-bridge/{ceremony_id}/redeem": {
     "authenticated": false
   },
+  "POST /auth/recover": {
+    "authenticated": false
+  },
   "POST /auth/register": {
     "authenticated": false
   },
@@ -100,6 +103,9 @@ export const routes = {
     "authenticated": false
   },
   "GET /auth/sso/status": {
+    "authenticated": false
+  },
+  "GET /auth/username-availability": {
     "authenticated": false
   },
   "POST /auth/username-suggestions": {
@@ -268,6 +274,9 @@ export const routes = {
     "authenticated": true
   },
   "GET /discovery/guilds": {
+    "authenticated": true
+  },
+  "GET /discovery/guilds/{guild_id}/channels/{channel_id}": {
     "authenticated": true
   },
   "POST /discovery/guilds/{guild_id}/join": {
@@ -465,6 +474,9 @@ export const routes = {
   "GET /harvest-downloads/{harvestId}": {
     "authenticated": false
   },
+  "PUT /instance/setup/account-identity": {
+    "authenticated": false
+  },
   "GET /invites/{invite_code}": {
     "authenticated": false
   },
@@ -656,12 +668,6 @@ export const routes = {
   },
   "POST /stripe/checkout/subscription": {
     "authenticated": true
-  },
-  "POST /stripe/checkout/subscription/preapproval": {
-    "authenticated": true
-  },
-  "POST /stripe/checkout/subscription/preapproval/continue": {
-    "authenticated": false
   },
   "POST /stripe/webhook": {
     "authenticated": false
@@ -930,6 +936,9 @@ export const routes = {
   "POST /users/@me/passkey-bridge/{ceremony_id}/redeem": {
     "authenticated": true
   },
+  "POST /users/@me/password": {
+    "authenticated": true
+  },
   "POST /users/@me/password-change/complete": {
     "authenticated": true
   },
@@ -940,15 +949,6 @@ export const routes = {
     "authenticated": true
   },
   "POST /users/@me/password-change/verify": {
-    "authenticated": true
-  },
-  "POST /users/@me/phone/inbound-challenge": {
-    "authenticated": true
-  },
-  "POST /users/@me/phone/send-verification": {
-    "authenticated": true
-  },
-  "POST /users/@me/phone/verify": {
     "authenticated": true
   },
   "POST /users/@me/preload-messages": {
@@ -967,6 +967,12 @@ export const routes = {
     "authenticated": true
   },
   "DELETE /users/@me/push/subscriptions/{subscription_id}": {
+    "authenticated": true
+  },
+  "GET /users/@me/recovery-kit": {
+    "authenticated": true
+  },
+  "POST /users/@me/recovery-kit": {
     "authenticated": true
   },
   "GET /users/@me/relationships": {
@@ -988,12 +994,6 @@ export const routes = {
     "authenticated": true
   },
   "DELETE /users/@me/relationships/{user_id}": {
-    "authenticated": true
-  },
-  "GET /users/@me/required-actions/phone-gate-escape": {
-    "authenticated": true
-  },
-  "POST /users/@me/required-actions/phone-gate-escape": {
     "authenticated": true
   },
   "GET /users/@me/saved-messages": {

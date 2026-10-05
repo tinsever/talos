@@ -275,7 +275,7 @@ export interface paths {
         put?: never;
         /**
          * Login account
-         * @description Authenticate with email and password. Returns authentication token if credentials are valid and MFA is not required. If MFA is enabled, returns a ticket for MFA verification. Requires a solved captcha challenge (X-Captcha-Token).
+         * @description Authenticate with a password and either email (or login on email instances) or login (a username on username instances). Returns authentication token if credentials are valid and MFA is not required. If MFA is enabled, returns a ticket for MFA verification. Requires a solved captcha challenge (X-Captcha-Token).
          */
         post: operations["login_user"];
         delete?: never;
@@ -504,6 +504,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/recover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Recover account with recovery kit
+         * @description Set a new password using the recovery key from a recovery kit. Only available on instances where people sign in with a username. Ends every session, replaces the recovery kit and returns the new recovery key. Returns an MFA ticket instead of a token when the account has two-factor authentication. Requires a solved captcha challenge (X-Captcha-Token).
+         */
+        post: operations["recover_account"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/register": {
         parameters: {
             query?: never;
@@ -515,7 +535,7 @@ export interface paths {
         put?: never;
         /**
          * Register account
-         * @description Create a new user account with email and password. Requires a solved captcha challenge (X-Captcha-Token). User account is created but must verify email before logging in.
+         * @description Create a new user account. Email instances take an email and password, and the account must verify its email before logging in. Username instances take a username and password, and an email sent by an older client is discarded. Requires a solved captcha challenge (X-Captcha-Token).
          */
         post: operations["register_account"];
         delete?: never;
@@ -656,6 +676,26 @@ export interface paths {
          * @description Retrieve the current status of the SSO authentication session without authentication required.
          */
         get: operations["get_sso_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/username-availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check username availability
+         * @description Check whether a username is free for a new account. Only available on instances where people sign in with a username or where usernames are unique. Usernames are compared without regard to case, and bots do not hold names. An invalid or reserved username returns a validation error.
+         */
+        get: operations["get_username_availability"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1569,6 +1609,26 @@ export interface paths {
          * @description Search for guilds listed in the discovery directory.
          */
         get: operations["search_discovery_guilds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/discovery/guilds/{guild_id}/channels/{channel_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview a channel in a discoverable guild
+         * @description Returns the guild and channel behind a channel or message link when the guild is listed in discovery and new members can read the channel.
+         */
+        get: operations["get_discovery_channel_preview"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2534,6 +2594,26 @@ export interface paths {
          */
         get: operations["download_data_harvest_archive"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/instance/setup/account-identity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Choose the sign-in method for a new instance
+         * @description Sets how people sign in on a new self-hosted instance, and for email sign-in whether usernames are unique with no tag. Username sign-in always uses unique usernames. It works only before setup is finished and before the first account exists. After that it fails with ACCOUNT_IDENTITY_LOCKED.
+         */
+        put: operations["set_instance_account_identity"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3725,46 +3805,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stripe/checkout/subscription/preapproval": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create localized card preapproval session
-         * @description Initiates a Stripe Checkout setup-mode session to preapprove a local card before continuing to paid localized checkout.
-         */
-        post: operations["create_localized_card_preapproval_session"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/stripe/checkout/subscription/preapproval/continue": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Continue localized card preapproval session
-         * @description Checks the status of a localized card preapproval flow and returns the paid Stripe Checkout URL when it is ready.
-         */
-        post: operations["continue_localized_card_preapproval_session"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/stripe/webhook": {
         parameters: {
             query?: never;
@@ -3914,7 +3954,7 @@ export interface paths {
         };
         /**
          * Get current user profile
-         * @description Retrieves the current authenticated user's profile information, including account details and settings. OAuth2 bearer tokens require identify scope, and email is returned only when the email scope is also present. Bearer tokens receive a reduced response: sensitive fields such as phone, MFA status, authenticator types, ACLs, traits, premium billing details, and password metadata are omitted. Session and bot tokens return the full user object with all private fields.
+         * @description Retrieves the current authenticated user's profile information, including account details and settings. OAuth2 bearer tokens require identify scope, and email is returned only when the email scope is also present. Bearer tokens receive a reduced response: sensitive fields such as MFA status, authenticator types, ACLs, traits, premium billing details, and password metadata are omitted. Session and bot tokens return the full user object with all private fields.
          */
         get: operations["get_current_user"];
         put?: never;
@@ -3924,7 +3964,7 @@ export interface paths {
         head?: never;
         /**
          * Update current user profile
-         * @description Updates the authenticated user's profile information such as username, avatar, and bio. Requires sudo mode verification for security-sensitive changes. Only default users can modify their own profile.
+         * @description Updates the authenticated user's profile information such as username, avatar, and bio. Requires sudo mode verification for security-sensitive changes. Only default users can modify their own profile. A password change invalidates all existing sessions and returns the replacement session token.
          */
         patch: operations["update_current_user"];
         trace?: never;
@@ -4276,7 +4316,7 @@ export interface paths {
         put?: never;
         /**
          * Verify replacement email for bounced address
-         * @description Completes bounced-email recovery by verifying the replacement email code, updating the account email, and clearing email-related suspicious-activity requirements.
+         * @description Completes bounced-email recovery by verifying the replacement email code, and updating the account email.
          */
         post: operations["verify_bounced_email_replacement"];
         delete?: never;
@@ -5289,6 +5329,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/@me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change password
+         * @description Changes the password on instances where people sign in with a username. Requires sudo mode verification. Ends every other session, deletes the recovery kit and returns a token for a new session that replaces the current one. Fails with USERNAME_SIGN_IN_ONLY on email instances.
+         */
+        post: operations["update_current_user_password"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/@me/password-change/complete": {
         parameters: {
             query?: never;
@@ -5363,66 +5423,6 @@ export interface paths {
          * @description Verifies the email code sent during password change. Returns a proof token needed to complete the password change.
          */
         post: operations["verify_password_change_code"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/@me/phone/inbound-challenge": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Start an inbound SMS challenge
-         * @description When an account must verify its phone number inbound, the user texts a one-time code to the platform's number instead of receiving one. This endpoint generates the code and the destination number to display.
-         */
-        post: operations["start_inbound_phone_challenge"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/@me/phone/send-verification": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Send phone verification code
-         * @description Send a one-time code on the requested channel. Defaults to the first available channel from server policy. Pass channel="sms" to request SMS (only honoured for SMS-allowlisted destinations) or channel="inbound_challenge" to receive challenge details to text in. Expensive outbound destinations always downgrade to an inbound challenge. Requires a solved captcha challenge (X-Captcha-Token) when the phone verification service asks for one.
-         */
-        post: operations["send_phone_verification_code"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/@me/phone/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Verify phone code
-         * @description Verify a phone number by confirming the SMS verification code. Returns phone verification status.
-         */
-        post: operations["verify_phone_code"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5549,6 +5549,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/@me/recovery-kit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get recovery kit status
+         * @description Check whether the current account has a recovery kit and when it was created. Only available on instances where people sign in with a username. The recovery key itself is never returned here.
+         */
+        get: operations["get_recovery_kit_status"];
+        put?: never;
+        /**
+         * Create recovery kit
+         * @description Create a recovery kit for the current account and return its recovery key. The key is shown only once and any previous kit stops working. Only available on instances where people sign in with a username. Requires sudo mode verification.
+         */
+        post: operations["create_recovery_kit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/@me/relationships": {
         parameters: {
             query?: never;
@@ -5623,30 +5647,6 @@ export interface paths {
          * @description Updates the nickname associated with a relationship (friend or blocked user). Nicknames are personal labels that override the user's display name in the current user's view. Returns updated relationship object.
          */
         patch: operations["update_relationship_nickname"];
-        trace?: never;
-    };
-    "/users/@me/required-actions/phone-gate-escape": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Preview setting the deferred phone check aside
-         * @description Reports whether this account can set a due phone verification requirement aside. The community lists are always empty.
-         */
-        get: operations["get_phone_gate_escape"];
-        put?: never;
-        /**
-         * Set the deferred phone check aside
-         * @description Defers a due phone verification requirement again, so the account works normally without leaving any community. Returns the updated private user object.
-         */
-        post: operations["execute_phone_gate_escape"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/users/@me/saved-messages": {
@@ -6210,7 +6210,7 @@ export interface components {
                 /** @description The ISO 8601 timestamp of when the call ended */
                 ended_timestamp?: string | null;
             } | null;
-            /** @description The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message carries no default reference. Clients must tell null apart from absent by key presence. */
+            /** @description The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message has no default reference. Clients must tell null apart from absent by key presence. */
             referenced_message?: {
                 /** @description The unique identifier (snowflake) for this message */
                 id: components["schemas"]["SnowflakeStringType"];
@@ -6774,9 +6774,7 @@ export interface components {
             email: string | null;
             /** @description Whether the current email address is marked as bounced by the mail provider */
             email_bounced?: boolean;
-            /** @description Always null. Retained for old-client backward compatibility — phone numbers are no longer stored on the user record. */
-            phone?: string | null;
-            /** @description Whether this account has completed phone verification */
+            /** @description Deprecated. Always false. */
             has_verified_phone: boolean;
             /** @description The user biography text */
             bio: string | null;
@@ -6797,6 +6795,8 @@ export interface components {
             authenticator_types?: components["schemas"]["UserAuthenticatorTypes"][];
             /** @description Whether the email address has been verified */
             verified: boolean;
+            /** @description Whether the account is limited */
+            account_limited?: boolean;
             premium_type: components["schemas"]["UserPremiumTypes"] | null;
             /** @description ISO8601 timestamp of when premium was first activated */
             premium_since: string | null;
@@ -6826,13 +6826,11 @@ export interface components {
             premium_enabled_override: boolean;
             /** @description Whether premium perks are temporarily disabled for this account */
             premium_perks_disabled: boolean;
-            /** @description Whether this account is forced through the inbound phone verification flow, for debugging */
-            force_inbound_phone_verification?: boolean;
             /** @description ISO8601 timestamp of the last password change */
             password_last_changed_at: string | null;
             /** @description ISO8601 timestamp of the last bulk voice-activity-sharing change. Drives the 24-hour cooldown for re-toggling the Active Now sharing default. */
             last_voice_activity_sharing_change_at: string | null;
-            /** @description Actions the user must complete before full access */
+            /** @description Deprecated. Always empty. */
             required_actions: string[];
             /** @description Whether the user is allowed to view NSFW content */
             nsfw_allowed: boolean;
@@ -7066,24 +7064,6 @@ export interface components {
             message_id: components["schemas"]["SnowflakeType"];
         };
         SavedMessageEntryListResponse: components["schemas"]["SavedMessageEntryResponse"][];
-        PhoneGateEscapePreviewResponse: {
-            /** @description Whether this account can set a due phone verification requirement aside right now */
-            available: boolean;
-            /** @description Always empty, the escape leaves no community */
-            guilds: {
-                /** @description The unique identifier (snowflake) for the community */
-                id: components["schemas"]["SnowflakeStringType"];
-                /** @description The community name */
-                name: string;
-            }[];
-            /** @description Always empty, the escape leaves no community */
-            owned_guilds: {
-                /** @description The unique identifier (snowflake) for the community */
-                id: components["schemas"]["SnowflakeStringType"];
-                /** @description The community name */
-                name: string;
-            }[];
-        };
         RelationshipNicknameUpdateRequest: {
             /** @description Custom nickname for this friend (max 256 characters) */
             nickname: string | null;
@@ -7133,6 +7113,36 @@ export interface components {
             discriminator: components["schemas"]["DiscriminatorType"];
         };
         RelationshipListResponse: components["schemas"]["RelationshipResponse"][];
+        SudoVerificationSchema: {
+            /** @description Account password for sudo verification */
+            password?: components["schemas"]["PasswordType"];
+            /**
+             * @description MFA method to use for verification
+             * @enum {string}
+             */
+            mfa_method?: "totp" | "webauthn";
+            /** @description MFA verification code from an authenticator app */
+            mfa_code?: string;
+            /** @description WebAuthn authentication response */
+            webauthn_response?: components["schemas"]["WebAuthnAuthenticationResponse"];
+            /** @description WebAuthn challenge string */
+            webauthn_challenge?: string;
+        };
+        RecoveryKitCreateResponse: {
+            /** @description New recovery key as 8 groups of 4 joined by dashes, shown only once. Any previous kit stops working */
+            recovery_key: string;
+            /**
+             * Format: date-time
+             * @description ISO 8601 timestamp when the recovery kit was created
+             */
+            created_at: string;
+        };
+        RecoveryKitStatusResponse: {
+            /** @description Whether the account has a recovery kit */
+            has_recovery_kit: boolean;
+            /** @description ISO 8601 timestamp when the current recovery kit was created */
+            created_at: string | null;
+        };
         SuccessResponse: {
             /**
              * @description Whether the operation succeeded
@@ -7193,63 +7203,6 @@ export interface components {
         PreloadMessagesResponse: {
             [key: string]: components["schemas"]["MessageResponseSchema"] | null;
         };
-        PhoneVerifyRequest: {
-            /** @description Phone number being verified */
-            phone: components["schemas"]["PhoneNumberType"];
-            /** @description The verification code */
-            code: string;
-        };
-        PhoneVerifyResponse: {
-            /**
-             * @description Indicates the phone number was verified successfully
-             * @constant
-             */
-            verified: true;
-        };
-        PhoneSendVerificationRequest: {
-            /** @description Phone number to send verification code */
-            phone: components["schemas"]["PhoneNumberType"];
-            /**
-             * @description Channel to deliver the OTP on. Defaults to the first available channel from server policy. Server may override to an available fallback when the requested channel is disabled.
-             * @enum {string}
-             */
-            channel?: "sms" | "inbound_challenge";
-        };
-        PhoneSendVerificationResponse: {
-            /**
-             * @description Channel actually used for delivery (may differ from request when server adjusts)
-             * @constant
-             */
-            channel: "sms";
-        } | {
-            /**
-             * @description The user must send Fluxer an SMS instead of receiving one
-             * @constant
-             */
-            channel: "inbound_challenge";
-            /** @description The numeric code the user must text to our number */
-            challenge_code: string;
-            /** @description The Twilio number the user must text the code to (E.164) */
-            our_number: string;
-            /**
-             * Format: date-time
-             * @description ISO 8601 timestamp when this inbound challenge expires
-             */
-            expires_at: string;
-            /**
-             * @description Always verification_required
-             * @enum {string}
-             */
-            reason: "verification_required";
-        };
-        InboundSmsChallengeStartResponse: {
-            /** @description The numeric code the user must text to our number */
-            challenge_code: string;
-            /** @description The Twilio number the user must text the code to (E.164) */
-            our_number: string;
-            /** @description ISO timestamp at which the challenge becomes invalid */
-            expires_at: string;
-        };
         PasswordChangeVerifyRequest: {
             /** @description Password change ticket identifier */
             ticket: string;
@@ -7281,6 +7234,29 @@ export interface components {
             new_password: components["schemas"]["PasswordType"];
         };
         PasswordChangeCompleteResponse: {
+            /** @description Authentication token for the newly created session */
+            token: string;
+            /** @description Base64url-encoded hash of the newly created authentication session */
+            auth_session_id_hash: string;
+        };
+        UserPasswordUpdateRequest: {
+            /** @description The new password to set */
+            new_password: components["schemas"]["PasswordType"];
+            /** @description Account password for sudo verification */
+            password?: components["schemas"]["PasswordType"];
+            /**
+             * @description MFA method to use for verification
+             * @enum {string}
+             */
+            mfa_method?: "totp" | "webauthn";
+            /** @description MFA verification code from an authenticator app */
+            mfa_code?: string;
+            /** @description WebAuthn authentication response */
+            webauthn_response?: components["schemas"]["WebAuthnAuthenticationResponse"];
+            /** @description WebAuthn challenge string */
+            webauthn_challenge?: string;
+        };
+        UserPasswordUpdateResponse: {
             /** @description Authentication token for the newly created session */
             token: string;
             /** @description Base64url-encoded hash of the newly created authentication session */
@@ -7417,21 +7393,6 @@ export interface components {
                 /** @description Whether the passkey was used from another device */
                 cross_device: boolean;
             } | null;
-        };
-        SudoVerificationSchema: {
-            /** @description Account password for sudo verification */
-            password?: components["schemas"]["PasswordType"];
-            /**
-             * @description MFA method to use for verification
-             * @enum {string}
-             */
-            mfa_method?: "totp" | "webauthn";
-            /** @description MFA verification code from an authenticator app */
-            mfa_code?: string;
-            /** @description WebAuthn authentication response */
-            webauthn_response?: components["schemas"]["WebAuthnAuthenticationResponse"];
-            /** @description WebAuthn challenge string */
-            webauthn_challenge?: string;
         };
         WebAuthnCredentialUpdateRequest: {
             /** @description New name for the credential */
@@ -8190,6 +8151,124 @@ export interface components {
             /** @description WebAuthn challenge string */
             webauthn_challenge?: string;
         };
+        UserUpdateResponse: {
+            /** @description The unique identifier (snowflake) for this user */
+            id: components["schemas"]["SnowflakeStringType"];
+            /** @description The username of the user, not unique across the platform */
+            username: string;
+            /** @description The four-digit discriminator tag of the user */
+            discriminator: string;
+            /** @description The display name of the user, if set */
+            global_name: string | null;
+            /** @description The hash of the user avatar image */
+            avatar: string | null;
+            /** @description The dominant avatar color of the user as an integer */
+            avatar_color: components["schemas"]["Int32Type"] | null;
+            /** @description Whether the user is a bot account */
+            bot?: boolean;
+            /** @description Whether the user is an official system user */
+            system?: boolean;
+            flags: components["schemas"]["PublicUserFlags"];
+            /** @description The user's account-wide reply mention preference. Omitted when the user has no preference set (treated as NO_PREFERENCE). */
+            mention_flags?: components["schemas"]["MentionReplyPreferences"];
+            /** @description Whether the user has staff permissions */
+            is_staff: boolean;
+            /** @description Access control list entries for the user */
+            acls: string[];
+            /** @description Special traits assigned to the user account */
+            traits: string[];
+            /** @description The email address associated with the account */
+            email: string | null;
+            /** @description Whether the current email address is marked as bounced by the mail provider */
+            email_bounced?: boolean;
+            /** @description Deprecated. Always false. */
+            has_verified_phone: boolean;
+            /** @description The user biography text */
+            bio: string | null;
+            /** @description The preferred pronouns of the user */
+            pronouns: string | null;
+            /** @description The user-selected accent color as an integer */
+            accent_color: components["schemas"]["Int32Type"] | null;
+            /** @description The IANA timezone identifier saved by the user */
+            timezone?: string | null;
+            timezone_privacy_flags?: components["schemas"]["ProfileFieldPrivacyFlags"];
+            /** @description The hash of the user profile banner image */
+            banner: string | null;
+            /** @description The default banner color if no custom banner is set */
+            banner_color: components["schemas"]["Int32Type"] | null;
+            /** @description Whether multi-factor authentication is enabled */
+            mfa_enabled: boolean;
+            /** @description The types of authenticators configured for MFA */
+            authenticator_types?: components["schemas"]["UserAuthenticatorTypes"][];
+            /** @description Whether the email address has been verified */
+            verified: boolean;
+            /** @description Whether the account is limited */
+            account_limited?: boolean;
+            premium_type: components["schemas"]["UserPremiumTypes"] | null;
+            /** @description ISO8601 timestamp of when premium was first activated */
+            premium_since: string | null;
+            /** @description ISO8601 timestamp of when premium access ends, including stacked gift time */
+            premium_until: string | null;
+            /** @description Whether premium is set to cancel at the end of the billing period */
+            premium_will_cancel: boolean;
+            /** @description The billing cycle for the premium subscription */
+            premium_billing_cycle: string | null;
+            /** @description The sequence number for lifetime premium subscribers */
+            premium_lifetime_sequence: components["schemas"]["Int32Type"] | null;
+            /** @description ISO8601 timestamp at which grace access ends after premium_until passes: after a failed renewal payment (7 days from the renewal for monthly plans, 14 for yearly), after a subscription ends (3 days), or during an App Store or Google Play grace period. Perks stay active and the original premium_since is kept on resubscribe until this timestamp passes. Null when no grace is recorded, in which case access lasts 3 days after premium_until. */
+            premium_grace_ends_at: string | null;
+            /** @description Whether the user selected a premium-only discriminator that will be rerolled when non-lifetime premium access ends */
+            premium_discriminator: boolean;
+            /** @description Whether the premium badge is hidden on the profile */
+            premium_badge_hidden: boolean;
+            /** @description Whether the premium badge shows a masked appearance */
+            premium_badge_masked: boolean;
+            /** @description Whether the premium start timestamp is hidden */
+            premium_badge_timestamp_hidden: boolean;
+            /** @description Whether the lifetime sequence number is hidden */
+            premium_badge_sequence_hidden: boolean;
+            /** @description Whether premium purchases are disabled for this account */
+            premium_purchase_disabled: boolean;
+            /** @description Whether premium features are enabled via override */
+            premium_enabled_override: boolean;
+            /** @description Whether premium perks are temporarily disabled for this account */
+            premium_perks_disabled: boolean;
+            /** @description ISO8601 timestamp of the last password change */
+            password_last_changed_at: string | null;
+            /** @description ISO8601 timestamp of the last bulk voice-activity-sharing change. Drives the 24-hour cooldown for re-toggling the Active Now sharing default. */
+            last_voice_activity_sharing_change_at: string | null;
+            /** @description Deprecated. Always empty. */
+            required_actions: string[];
+            /** @description Whether the user is allowed to view NSFW content */
+            nsfw_allowed: boolean;
+            /** @description Whether the user has dismissed the premium onboarding flow */
+            has_dismissed_premium_onboarding: boolean;
+            /** @description Whether the user has ever made a purchase */
+            has_ever_purchased: boolean;
+            /** @description Whether there are unread items in the gift inventory */
+            has_unread_gift_inventory: boolean;
+            /** @description The number of unread gift inventory items */
+            unread_gift_inventory_count: components["schemas"]["Int32Type"];
+            /** @description Information about a pending bulk message deletion request. Only populated when the legacy delayed-deletion flow is in progress; the new immediate-deletion flow does not surface a pending state here. */
+            pending_bulk_message_deletion: {
+                /** @description ISO8601 timestamp of when the deletion was scheduled */
+                scheduled_at: string;
+                /** @description The number of channels with messages to delete */
+                channel_count: components["schemas"]["Int32Type"];
+                /** @description The total number of messages to delete */
+                message_count: components["schemas"]["Int32Type"];
+            } | null;
+            /** @description Whether the user has verified their age as an adult via credit card verification */
+            age_verified_adult?: boolean;
+            /** @description ISO8601 timestamp of when the user last agreed to the terms of service */
+            terms_agreed_at: string | null;
+            /** @description ISO8601 timestamp of when the user last agreed to the privacy policy */
+            privacy_agreed_at: string | null;
+            /** @description Authentication token for the replacement session, present when the password was changed */
+            token?: string;
+            /** @description Base64url-encoded hash of the replacement authentication session, present when the password was changed */
+            auth_session_id_hash?: string;
+        };
         UnfurlRequest: {
             /** @description The URL to unfurl */
             url: string;
@@ -8221,11 +8300,6 @@ export interface components {
             /** @description Whether the webhook was successfully received */
             received: boolean;
         };
-        LocalizedCardPreapprovalContinueRequest: {
-            /** @description Continuation token for the localized card preapproval flow */
-            token: string;
-        };
-        LocalizedCardPreapprovalContinueResponse: components["schemas"]["PendingLocalizedCardPreapprovalContinueResponse"] | components["schemas"]["ReadyLocalizedCardPreapprovalContinueResponse"] | components["schemas"]["RejectedLocalizedCardPreapprovalContinueResponse"] | components["schemas"]["ExpiredLocalizedCardPreapprovalContinueResponse"];
         CreateCheckoutSessionRequest: {
             /** @description The Stripe price ID for the subscription plan */
             price_id: string;
@@ -8994,6 +9068,17 @@ export interface components {
             ageBlockedGeos: components["schemas"]["GeoEntry"][];
         };
         InviteResponseSchema: components["schemas"]["GuildInviteResponse"] | components["schemas"]["GroupDmInviteResponse"];
+        InstanceAccountIdentityUpdateRequest: {
+            /** @description Sign-in method for the new instance */
+            mode: components["schemas"]["AccountIdentityModeSchema"];
+            /** @description How usernames are tagged. Defaults to none. Username sign-in accepts only none */
+            tag_style?: components["schemas"]["TagStyleSchema"];
+        };
+        InstanceAccountIdentityResponse: {
+            /** @description Sign-in method now in effect */
+            mode: components["schemas"]["AccountIdentityModeSchema"];
+            tag_style: components["schemas"]["TagStyleSchema"];
+        };
         /**
          * Format: binary
          * @description The ZIP archive containing the requested user data
@@ -9661,6 +9746,26 @@ export interface components {
              */
             url: string;
         };
+        DiscoveryChannelPreviewResponse: {
+            /** @description The discoverable guild the channel belongs to */
+            guild: {
+                /** @description Guild ID */
+                id: components["schemas"]["SnowflakeStringType"];
+                /** @description Guild name */
+                name: string;
+                /** @description Guild icon hash */
+                icon: string | null;
+            };
+            /** @description A channel that new members can view */
+            channel: {
+                /** @description Channel ID */
+                id: components["schemas"]["SnowflakeStringType"];
+                /** @description Channel name */
+                name: string | null;
+                /** @description Channel type */
+                type: number;
+            };
+        };
         DiscoveryGuildListResponse: {
             /** @description Discovery guild results */
             guilds: {
@@ -10228,6 +10333,10 @@ export interface components {
             /** @description List of suggested usernames */
             suggestions: string[];
         };
+        UsernameAvailabilityResponse: {
+            /** @description Whether no other account holds this username */
+            available: boolean;
+        };
         SsoStatusResponse: {
             /** @description Whether SSO is enabled for this instance */
             enabled: boolean;
@@ -10356,6 +10465,52 @@ export interface components {
             /** @description Whether the account has at least one unconsumed backup code */
             backup_codes: boolean;
         } | components["schemas"]["AuthRegistrationPendingApprovalResponse"];
+        RecoverAccountRequest: {
+            /** @description Username of the account to recover */
+            login: string;
+            /** @description Recovery key from the recovery kit. Spaces and dashes are ignored */
+            recovery_key: string;
+            /** @description New password to set */
+            password: components["schemas"]["PasswordType"];
+        };
+        RecoverAccountResponse: {
+            /** @description Authentication token for API requests */
+            token: string;
+            /** @description ID of the authenticated user */
+            user_id: components["schemas"]["SnowflakeStringType"];
+            /** @description Partial user data for the authenticated account */
+            user: components["schemas"]["UserPartialResponse"];
+            /** @description New recovery key as 8 groups of 4 joined by dashes. It replaces the one just used and is shown only once */
+            recovery_key: string;
+            /**
+             * Format: date-time
+             * @description ISO 8601 timestamp when the new recovery kit was created
+             */
+            recovery_kit_created_at: string;
+        } | {
+            /**
+             * @description Indicates MFA is required to complete authentication
+             * @constant
+             */
+            mfa: true;
+            /** @description MFA ticket to use when completing MFA verification */
+            ticket: string;
+            /** @description List of allowed MFA methods */
+            allowed_methods: string[];
+            /** @description Whether TOTP authenticator MFA is available */
+            totp: boolean;
+            /** @description Whether WebAuthn security key MFA is available */
+            webauthn: boolean;
+            /** @description Whether the account has at least one unconsumed backup code */
+            backup_codes: boolean;
+            /** @description New recovery key as 8 groups of 4 joined by dashes. It replaces the one just used and is shown only once */
+            recovery_key: string;
+            /**
+             * Format: date-time
+             * @description ISO 8601 timestamp when the new recovery kit was created
+             */
+            recovery_kit_created_at: string;
+        };
         PasskeyBridgeLoginRedeemResponse: components["schemas"]["CancelledPasskeyBridgeLoginRedeemResponse"] | components["schemas"]["CompletedPasskeyBridgeLoginRedeemResponse"];
         PasskeyBridgeOptionsResponse: {
             /** @description WebAuthn authentication options for the ceremony */
@@ -10422,8 +10577,10 @@ export interface components {
             ticket: string;
         };
         LoginRequest: {
-            /** @description Email address for authentication */
-            email: components["schemas"]["EmailType"];
+            /** @description Email address for authentication. Send this or login, not both */
+            email?: components["schemas"]["EmailType"];
+            /** @description Sign-in identifier. An email address on email instances, a username on username instances */
+            login?: string;
             /** @description Account password */
             password: components["schemas"]["PasswordType"];
             /** @description Guild invite code to join after login */
@@ -10635,6 +10792,8 @@ export interface components {
             configured: boolean;
             /** @description Admin panel URL to continue instance setup */
             admin_url: string | null;
+            /** @description Present only while a self-hosted instance is unconfigured. True when the sign-in method can no longer change */
+            account_identity_locked?: boolean;
         };
         /** @description Branding values safe to expose to clients */
         InstanceBrandingSchema: {
@@ -10729,8 +10888,12 @@ export interface components {
             presigned_attachment_uploads: boolean;
             /** @description Whether the instance sends emails (verification, password reset, etc.) */
             emails_enabled: boolean;
-            /** @description Whether users can verify a phone number, so the very high guild verification level applies */
+            /** @description Deprecated. Always false. */
             phone_verification_enabled: boolean;
+            /** @description How people sign in on this instance. Clients treat a missing value as email */
+            account_identity?: components["schemas"]["AccountIdentityModeSchema"];
+            /** @description How usernames are tagged. Clients treat a missing value as random */
+            tag_style?: components["schemas"]["TagStyleSchema"];
         };
         /** @description Captcha configuration */
         InstanceCaptchaSchema: {
@@ -10765,6 +10928,16 @@ export interface components {
         /** @enum {string} */
         InstanceCaptchaProviderSchema: "altcha" | "none";
         /**
+         * @description How usernames are tagged
+         * @enum {string}
+         */
+        TagStyleSchema: "none" | "random";
+        /**
+         * @description How people identify themselves when they sign in
+         * @enum {string}
+         */
+        AccountIdentityModeSchema: "email" | "username";
+        /**
          * @description Registration mode
          * @enum {string}
          */
@@ -10796,7 +10969,7 @@ export interface components {
         RefreshedAttachmentUrl: {
             /** @description The requested URL, echoed back unchanged */
             original: string;
-            /** @description The same URL carrying a fresh signature, or the original when it is not an attachment URL of ours */
+            /** @description The same URL with a fresh signature, or the original when it is not an attachment URL of ours */
             refreshed: string;
         };
         PasswordType: string;
@@ -11623,7 +11796,7 @@ export interface components {
             /** @description The channel topic */
             topic?: string | null;
             /** @description The position of the channel */
-            position: number;
+            position: components["schemas"]["Int32Type"];
             /** @description The template-local ID of the parent category */
             parent_id?: (number | string) | null;
             /** @description The bitrate for voice channels */
@@ -11658,7 +11831,7 @@ export interface components {
             /** @description The permissions bitfield as a string (preferred) */
             permissions_new?: string | number;
             /** @description The colour of the role as an integer */
-            color?: number;
+            color?: components["schemas"]["ColorType"];
             /** @description Whether the role is hoisted */
             hoist?: boolean;
             /** @description Whether the role is mentionable */
@@ -11689,7 +11862,7 @@ export interface components {
          * @description Required verification level for members
          * @enum {integer}
          */
-        GuildVerificationLevelInput: 0 | 1 | 2 | 3 | 4;
+        GuildVerificationLevelInput: 0 | 1 | 2 | 3;
         /**
          * Format: int32
          * @description Default notification level for new members
@@ -12147,7 +12320,7 @@ export interface components {
          * @description Required verification level for members
          * @enum {integer}
          */
-        GuildVerificationLevel: 0 | 1 | 2 | 3 | 4;
+        GuildVerificationLevel: 0 | 1 | 2 | 3;
         GroupDmInviteResponse: {
             /** @description The unique invite code */
             code: string;
@@ -12723,43 +12896,6 @@ export interface components {
         MessageAuthorType: "user" | "bot" | "webhook";
         /** @enum {string} */
         CheckoutPaymentMethodEnum: "card" | "pix" | "upi";
-        ExpiredLocalizedCardPreapprovalContinueResponse: {
-            /**
-             * @description The preapproval token has expired or is unknown
-             * @constant
-             */
-            status: "expired";
-        };
-        RejectedLocalizedCardPreapprovalContinueResponse: {
-            /**
-             * @description The preapproval failed and the paid checkout should not continue
-             * @constant
-             */
-            status: "rejected";
-            /**
-             * @description The reason the preapproval was rejected
-             * @enum {string}
-             */
-            reason: "country_mismatch" | "missing_customer" | "missing_payment_method" | "missing_setup_intent" | "payment_method_not_card" | "unknown";
-            /** @description The detected card issuing country when available */
-            actual_country?: string | null;
-        };
-        ReadyLocalizedCardPreapprovalContinueResponse: {
-            /**
-             * @description The preapproval succeeded and the paid checkout URL is ready
-             * @constant
-             */
-            status: "ready";
-            /** @description The URL to redirect to */
-            url: string;
-        };
-        PendingLocalizedCardPreapprovalContinueResponse: {
-            /**
-             * @description The preapproval result is still being processed
-             * @constant
-             */
-            status: "pending";
-        };
         GifCategoryTagResponse: {
             /** @description Category search term (locale-translated label suitable for display). */
             name: string;
@@ -12806,6 +12942,12 @@ export interface components {
             /** @description Height of this format in pixels. */
             height: components["schemas"]["Int32Type"];
         };
+        /**
+         * Format: int32
+         * @description Authenticator type
+         * @enum {integer}
+         */
+        UserAuthenticatorTypes: 0 | 2;
         /**
          * Format: int32
          * @description Bitfield controlling who can see the profile timezone
@@ -12948,12 +13090,6 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        /**
-         * Format: int32
-         * @description Authenticator type
-         * @enum {integer}
-         */
-        UserAuthenticatorTypes: 0 | 2;
         HexString32Type: string;
         CompletedPasskeyBridgeSudoRedeemResponse: {
             /**
@@ -12971,7 +13107,6 @@ export interface components {
              */
             status: "cancelled";
         };
-        PhoneNumberType: string;
         /**
          * Format: int32
          * @description Relationship type
@@ -14729,6 +14864,65 @@ export interface operations {
             };
         };
     };
+    recover_account: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoverAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoverAccountResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     register_account: {
         parameters: {
             query?: never;
@@ -15187,6 +15381,64 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SsoStatusResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    get_username_availability: {
+        parameters: {
+            query: {
+                /** @description Username to check (1-32 characters) */
+                username: components["schemas"]["UsernameType"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsernameAvailabilityResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
@@ -19483,6 +19735,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DiscoveryGuildListResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    get_discovery_channel_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the guild */
+                guild_id: components["schemas"]["SnowflakeType"];
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscoveryChannelPreviewResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
@@ -24480,6 +24810,65 @@ export interface operations {
             };
         };
     };
+    set_instance_account_identity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InstanceAccountIdentityUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstanceAccountIdentityResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     get_invite: {
         parameters: {
             query?: never;
@@ -29143,142 +29532,6 @@ export interface operations {
             };
         };
     };
-    create_localized_card_preapproval_session: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateCheckoutSessionRequest"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UrlResponse"];
-                };
-            };
-            /** @description Bad Request - The request was malformed or contained invalid data */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized - Authentication is required or the token is invalid */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Forbidden - You do not have permission to perform this action */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too Many Requests - You are being rate limited */
-            429: {
-                headers: {
-                    /** @description Number of seconds to wait before retrying (only on 429) */
-                    "Retry-After"?: number;
-                    /** @description The number of requests that can be made in the current window */
-                    "X-RateLimit-Limit"?: number;
-                    /** @description The number of remaining requests that can be made */
-                    "X-RateLimit-Remaining"?: number;
-                    /** @description Unix timestamp when the rate limit resets */
-                    "X-RateLimit-Reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThrottledError"];
-                };
-            };
-            /** @description Internal Server Error - An unexpected error occurred */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    continue_localized_card_preapproval_session: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LocalizedCardPreapprovalContinueRequest"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LocalizedCardPreapprovalContinueResponse"];
-                };
-            };
-            /** @description Bad Request - The request was malformed or contained invalid data */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too Many Requests - You are being rate limited */
-            429: {
-                headers: {
-                    /** @description Number of seconds to wait before retrying (only on 429) */
-                    "Retry-After"?: number;
-                    /** @description The number of requests that can be made in the current window */
-                    "X-RateLimit-Limit"?: number;
-                    /** @description The number of remaining requests that can be made */
-                    "X-RateLimit-Remaining"?: number;
-                    /** @description Unix timestamp when the rate limit resets */
-                    "X-RateLimit-Reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThrottledError"];
-                };
-            };
-            /** @description Internal Server Error - An unexpected error occurred */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
     process_stripe_webhook: {
         parameters: {
             query?: never;
@@ -29886,7 +30139,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserPrivateResponse"];
+                    "application/json": components["schemas"]["UserUpdateResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
@@ -36026,6 +36279,83 @@ export interface operations {
             };
         };
     };
+    update_current_user_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserPasswordUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserPasswordUpdateResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     complete_password_change: {
         parameters: {
             query?: never;
@@ -36275,233 +36605,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PasswordChangeVerifyResponse"];
-                };
-            };
-            /** @description Bad Request - The request was malformed or contained invalid data */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized - Authentication is required or the token is invalid */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Forbidden - You do not have permission to perform this action */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too Many Requests - You are being rate limited */
-            429: {
-                headers: {
-                    /** @description Number of seconds to wait before retrying (only on 429) */
-                    "Retry-After"?: number;
-                    /** @description The number of requests that can be made in the current window */
-                    "X-RateLimit-Limit"?: number;
-                    /** @description The number of remaining requests that can be made */
-                    "X-RateLimit-Remaining"?: number;
-                    /** @description Unix timestamp when the rate limit resets */
-                    "X-RateLimit-Reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThrottledError"];
-                };
-            };
-            /** @description Internal Server Error - An unexpected error occurred */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    start_inbound_phone_challenge: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InboundSmsChallengeStartResponse"];
-                };
-            };
-            /** @description Bad Request - The request was malformed or contained invalid data */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized - Authentication is required or the token is invalid */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Forbidden - You do not have permission to perform this action */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too Many Requests - You are being rate limited */
-            429: {
-                headers: {
-                    /** @description Number of seconds to wait before retrying (only on 429) */
-                    "Retry-After"?: number;
-                    /** @description The number of requests that can be made in the current window */
-                    "X-RateLimit-Limit"?: number;
-                    /** @description The number of remaining requests that can be made */
-                    "X-RateLimit-Remaining"?: number;
-                    /** @description Unix timestamp when the rate limit resets */
-                    "X-RateLimit-Reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThrottledError"];
-                };
-            };
-            /** @description Internal Server Error - An unexpected error occurred */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    send_phone_verification_code: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PhoneSendVerificationRequest"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PhoneSendVerificationResponse"];
-                };
-            };
-            /** @description Bad Request - The request was malformed or contained invalid data */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized - Authentication is required or the token is invalid */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Forbidden - You do not have permission to perform this action */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too Many Requests - You are being rate limited */
-            429: {
-                headers: {
-                    /** @description Number of seconds to wait before retrying (only on 429) */
-                    "Retry-After"?: number;
-                    /** @description The number of requests that can be made in the current window */
-                    "X-RateLimit-Limit"?: number;
-                    /** @description The number of remaining requests that can be made */
-                    "X-RateLimit-Remaining"?: number;
-                    /** @description Unix timestamp when the rate limit resets */
-                    "X-RateLimit-Reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThrottledError"];
-                };
-            };
-            /** @description Internal Server Error - An unexpected error occurred */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    verify_phone_code: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PhoneVerifyRequest"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PhoneVerifyResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
@@ -36953,6 +37056,156 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    get_recovery_kit_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryKitStatusResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    create_recovery_kit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SudoVerificationSchema"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryKitCreateResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
@@ -37494,156 +37747,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RelationshipResponse"];
-                };
-            };
-            /** @description Bad Request - The request was malformed or contained invalid data */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized - Authentication is required or the token is invalid */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Forbidden - You do not have permission to perform this action */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too Many Requests - You are being rate limited */
-            429: {
-                headers: {
-                    /** @description Number of seconds to wait before retrying (only on 429) */
-                    "Retry-After"?: number;
-                    /** @description The number of requests that can be made in the current window */
-                    "X-RateLimit-Limit"?: number;
-                    /** @description The number of remaining requests that can be made */
-                    "X-RateLimit-Remaining"?: number;
-                    /** @description Unix timestamp when the rate limit resets */
-                    "X-RateLimit-Reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThrottledError"];
-                };
-            };
-            /** @description Internal Server Error - An unexpected error occurred */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    get_phone_gate_escape: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PhoneGateEscapePreviewResponse"];
-                };
-            };
-            /** @description Bad Request - The request was malformed or contained invalid data */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized - Authentication is required or the token is invalid */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Forbidden - You do not have permission to perform this action */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too Many Requests - You are being rate limited */
-            429: {
-                headers: {
-                    /** @description Number of seconds to wait before retrying (only on 429) */
-                    "Retry-After"?: number;
-                    /** @description The number of requests that can be made in the current window */
-                    "X-RateLimit-Limit"?: number;
-                    /** @description The number of remaining requests that can be made */
-                    "X-RateLimit-Remaining"?: number;
-                    /** @description Unix timestamp when the rate limit resets */
-                    "X-RateLimit-Reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThrottledError"];
-                };
-            };
-            /** @description Internal Server Error - An unexpected error occurred */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    execute_phone_gate_escape: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["EmptyBodyRequest"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserPrivateResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
