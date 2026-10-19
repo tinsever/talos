@@ -131,7 +131,7 @@ export interface paths {
         put?: never;
         /**
          * Complete handoff
-         * @description Complete the handoff process and authenticate on the target device using the handoff code.
+         * @description Complete the handoff process and authenticate on the target device using the handoff code. With the deep_link return method, responds with the deep link that hands the one-time grant back to the initiating app. Otherwise responds with no content.
          */
         post: operations["complete_handoff"];
         delete?: never;
@@ -151,7 +151,7 @@ export interface paths {
         put?: never;
         /**
          * Initiate handoff
-         * @description Start a handoff session to transfer authentication between devices. Returns a handoff code for device linking.
+         * @description Start a handoff session to transfer authentication between devices. Returns a handoff code for device linking. A desktop app that registers a return deep link can be signed in without the user typing the code.
          */
         post: operations["initiate_handoff"];
         delete?: never;
@@ -175,6 +175,26 @@ export interface paths {
          * @description Cancel an ongoing handoff session. The handoff code will no longer be valid for authentication.
          */
         delete: operations["cancel_handoff"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/handoff/{code}/deny": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Deny handoff
+         * @description Decline a handoff request after looking it up. The initiating device sees the denied status and the code can no longer be approved.
+         */
+        post: operations["deny_handoff"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -275,7 +295,7 @@ export interface paths {
         put?: never;
         /**
          * Login account
-         * @description Authenticate with email and password. Returns authentication token if credentials are valid and MFA is not required. If MFA is enabled, returns a ticket for MFA verification. Requires a solved captcha challenge (X-Captcha-Token).
+         * @description Authenticate with a password and either email (or login on email instances) or login (a username on username instances). Returns authentication token if credentials are valid and MFA is not required. If MFA is enabled, returns a ticket for MFA verification. Requires a solved captcha challenge (X-Captcha-Token).
          */
         post: operations["login_user"];
         delete?: never;
@@ -504,6 +524,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/recover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Recover account with recovery kit
+         * @description Set a new password using the recovery key from a recovery kit. Only available on instances where people sign in with a username. Ends every session, replaces the recovery kit and returns the new recovery key. Returns an MFA ticket instead of a token when the account has two-factor authentication. Requires a solved captcha challenge (X-Captcha-Token).
+         */
+        post: operations["recover_account"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/register": {
         parameters: {
             query?: never;
@@ -515,7 +555,7 @@ export interface paths {
         put?: never;
         /**
          * Register account
-         * @description Create a new user account with email and password. Requires a solved captcha challenge (X-Captcha-Token). User account is created but must verify email before logging in.
+         * @description Create a new user account. Email instances take an email and password, and the account must verify its email before logging in. Username instances take a username and password, and an email sent by an older client is discarded. Requires a solved captcha challenge (X-Captcha-Token).
          */
         post: operations["register_account"];
         delete?: never;
@@ -656,6 +696,26 @@ export interface paths {
          * @description Retrieve the current status of the SSO authentication session without authentication required.
          */
         get: operations["get_sso_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/username-availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check username availability
+         * @description Check whether a username is free for a new account. Only available on instances where people sign in with a username or where usernames are unique. Usernames are compared without regard to case, and bots do not hold names. An invalid or reserved username returns a validation error.
+         */
+        get: operations["get_username_availability"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1361,6 +1421,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/channels/{channel_id}/messages/{message_id}/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start a thread from a message
+         * @description Creates a public thread from an existing message in a text channel. The thread shares the ID of the message, so a message can start one thread.
+         */
+        post: operations["start_thread_from_message"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/channels/{channel_id}/permissions/{overwrite_id}": {
         parameters: {
             query?: never;
@@ -1424,6 +1504,26 @@ export interface paths {
          * @description Unpins a message from the channel. Requires permission to manage pins. The message remains in the channel but is no longer highlighted. Returns 204 No Content on success.
          */
         delete: operations["unpin_message"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/channels/{channel_id}/post-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get forum post data
+         * @description Returns the owner and first message of each requested post in a forum or media channel. Requires the read message history permission.
+         */
+        post: operations["get_channel_post_data"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1493,6 +1593,222 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/channels/{channel_id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a forum tag
+         * @description Adds a tag to a forum or media channel. Requires the manage channels permission. Returns the updated channel.
+         */
+        post: operations["create_forum_tag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/channels/{channel_id}/tags/{tag_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update a forum tag
+         * @description Replaces a tag of a forum or media channel. Requires the manage channels permission. Returns the updated channel.
+         */
+        put: operations["update_forum_tag"];
+        post?: never;
+        /**
+         * Delete a forum tag
+         * @description Removes a tag from a forum or media channel. Requires the manage channels permission. Returns the updated channel.
+         */
+        delete: operations["delete_forum_tag"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/channels/{channel_id}/thread-members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List thread members
+         * @description Returns thread members ordered by user ID. Paginate with after and limit. Set with_member to include the guild member object of each thread member.
+         */
+        get: operations["list_thread_members"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/channels/{channel_id}/thread-members/@me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Join a thread
+         * @description Adds the current user to the thread. The thread must not be archived.
+         */
+        put: operations["join_thread"];
+        post?: never;
+        /**
+         * Leave a thread
+         * @description Removes the current user from the thread. The thread must not be archived.
+         */
+        delete: operations["leave_thread"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/channels/{channel_id}/thread-members/@me/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update thread settings
+         * @description Updates the current user's notification settings for a thread they are a member of. Returns the thread member, or 204 when nothing changed.
+         */
+        patch: operations["update_thread_member_settings"];
+        trace?: never;
+    };
+    "/channels/{channel_id}/thread-members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a thread member
+         * @description Returns the thread member object of the user when the user is a member of the thread.
+         */
+        get: operations["get_thread_member"];
+        /**
+         * Add a thread member
+         * @description Adds another guild member to the thread. Requires permission to send messages in threads, and the thread must not be archived.
+         */
+        put: operations["add_thread_member"];
+        post?: never;
+        /**
+         * Remove a thread member
+         * @description Removes a member from the thread. Requires the manage threads permission, or being the creator of a private thread. The thread must not be archived.
+         */
+        delete: operations["remove_thread_member"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/channels/{channel_id}/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start a thread
+         * @description Creates a thread that is not attached to an existing message. In a text channel the thread type is required. In a forum or media channel this creates a post, and the body carries the first message. The body can also be sent as multipart form data with the JSON in a payload_json field, and a post can attach files as files[n] parts.
+         */
+        post: operations["start_thread"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/channels/{channel_id}/threads/archived/private": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List private archived threads
+         * @description Returns archived private threads of the text channel, most recently archived first. Requires the read message history and manage threads permissions.
+         */
+        get: operations["list_private_archived_threads"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/channels/{channel_id}/threads/archived/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List public archived threads
+         * @description Returns archived public threads of the channel, most recently archived first. Requires the read message history permission.
+         */
+        get: operations["list_public_archived_threads"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/channels/{channel_id}/threads/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search threads
+         * @description Returns threads of the channel that match the search. Requires the read message history permission. While the search index of the guild is being built, responds with 202 and a body that says when to retry.
+         */
+        get: operations["search_threads"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/channels/{channel_id}/typing": {
         parameters: {
             query?: never;
@@ -1504,9 +1820,29 @@ export interface paths {
         put?: never;
         /**
          * Indicate typing activity
-         * @description Notifies other users in the channel that you are actively typing. Typing indicators typically expire after a short period (usually 10 seconds). Returns 204 No Content. Commonly called repeatedly while the user is composing a message.
+         * @description Notifies other users in the channel that you are actively typing. Typing indicators typically expire after a short period (usually 10 seconds). Returns 204 No Content, or 200 with a JSON body holding the remaining slowmode cooldowns in message_send_cooldown_ms and thread_create_cooldown_ms when the user is rate limited. Commonly called repeatedly while the user is composing a message.
          */
         post: operations["indicate_typing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/channels/{channel_id}/users/@me/threads/archived/private": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List joined private archived threads
+         * @description Returns archived private threads of the text channel that the current user joined, newest first. Requires the read message history permission.
+         */
+        get: operations["list_joined_private_archived_threads"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1569,6 +1905,26 @@ export interface paths {
          * @description Search for guilds listed in the discovery directory.
          */
         get: operations["search_discovery_guilds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/discovery/guilds/{guild_id}/channels/{channel_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview a channel in a discoverable guild
+         * @description Returns the guild and channel behind a channel or message link when the guild is listed in discovery and new members can read the channel.
+         */
+        get: operations["get_discovery_channel_preview"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2457,6 +2813,26 @@ export interface paths {
         patch: operations["update_guild_sticker"];
         trace?: never;
     };
+    "/guilds/{guild_id}/threads/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List active guild threads
+         * @description Returns every active thread in the guild that the bot can view, newest first, with a thread member object for each thread the bot joined.
+         */
+        get: operations["list_guild_active_threads"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/guilds/{guild_id}/transfer-ownership": {
         parameters: {
             query?: never;
@@ -2534,6 +2910,26 @@ export interface paths {
          */
         get: operations["download_data_harvest_archive"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/instance/setup/account-identity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Choose the sign-in method for a new instance
+         * @description Sets how people sign in on a new self-hosted instance, and for email sign-in whether usernames are unique with no tag. Username sign-in always uses unique usernames. It works only before setup is finished and before the first account exists. After that it fails with ACCOUNT_IDENTITY_LOCKED. While the instance requires a setup token, the request must send it as setup_token.
+         */
+        put: operations["set_instance_account_identity"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3448,7 +3844,7 @@ export interface paths {
         put?: never;
         /**
          * Create DSA report
-         * @description Creates a DSA complaint report with verified email for Digital Services Act compliance.
+         * @description Creates a DSA complaint report with verified email for Digital Services Act compliance. The reason comes from the answers given in the DSA report flow.
          */
         post: operations["create_dsa_report"];
         delete?: never;
@@ -3468,7 +3864,7 @@ export interface paths {
         put?: never;
         /**
          * Send DSA report email
-         * @description Initiates DSA (Digital Services Act) report submission by sending verification email to reporter.
+         * @description Initiates DSA (Digital Services Act) report submission by sending verification email to reporter. Responds with 503 when the email could not be sent.
          */
         post: operations["send_dsa_report_email"];
         delete?: never;
@@ -3497,7 +3893,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/reports/guild": {
+    "/reports/flows/message/submissions": {
         parameters: {
             query?: never;
             header?: never;
@@ -3507,17 +3903,17 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Report guild
-         * @description Submits a report about a guild to moderators for policy violation review.
+         * Submit message report flow
+         * @description Files a report about a message from the answers given in the in-app message report flow. The reporter must be able to access the channel and target message.
          */
-        post: operations["report_guild"];
+        post: operations["submit_message_report_flow"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/reports/message": {
+    "/reports/flows/user/submissions": {
         parameters: {
             query?: never;
             header?: never;
@@ -3527,30 +3923,30 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Report message
-         * @description Submits a report about a message to moderators for content violation review. The reporter must be able to access the channel and target message.
+         * Submit user report flow
+         * @description Files a report about a user profile from the answers given in the in-app user profile report flow.
          */
-        post: operations["report_message"];
+        post: operations["submit_user_report_flow"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/reports/user": {
+    "/reports/flows/{target_type}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /**
-         * Report user
-         * @description Submits a report about a user to moderators for content violation or behaviour review.
+         * Get report flow
+         * @description Returns every screen of the report flow for a target type, rendered in the requested locale. Message and user flows are available in app and on the DSA form, the guild flow only on the DSA form.
          */
-        post: operations["report_user"];
+        get: operations["get_report_flow"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3725,46 +4121,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stripe/checkout/subscription/preapproval": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create localized card preapproval session
-         * @description Initiates a Stripe Checkout setup-mode session to preapprove a local card before continuing to paid localized checkout.
-         */
-        post: operations["create_localized_card_preapproval_session"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/stripe/checkout/subscription/preapproval/continue": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Continue localized card preapproval session
-         * @description Checks the status of a localized card preapproval flow and returns the paid Stripe Checkout URL when it is ready.
-         */
-        post: operations["continue_localized_card_preapproval_session"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/stripe/webhook": {
         parameters: {
             query?: never;
@@ -3914,7 +4270,7 @@ export interface paths {
         };
         /**
          * Get current user profile
-         * @description Retrieves the current authenticated user's profile information, including account details and settings. OAuth2 bearer tokens require identify scope, and email is returned only when the email scope is also present. Bearer tokens receive a reduced response: sensitive fields such as phone, MFA status, authenticator types, ACLs, traits, premium billing details, and password metadata are omitted. Session and bot tokens return the full user object with all private fields.
+         * @description Retrieves the current authenticated user's profile information, including account details and settings. OAuth2 bearer tokens require identify scope, and email is returned only when the email scope is also present. Bearer tokens receive a reduced response: sensitive fields such as MFA status, authenticator types, ACLs, traits, premium billing details, and password metadata are omitted. Session and bot tokens return the full user object with all private fields.
          */
         get: operations["get_current_user"];
         put?: never;
@@ -3924,7 +4280,7 @@ export interface paths {
         head?: never;
         /**
          * Update current user profile
-         * @description Updates the authenticated user's profile information such as username, avatar, and bio. Requires sudo mode verification for security-sensitive changes. Only default users can modify their own profile.
+         * @description Updates the authenticated user's profile information such as username, avatar, and bio. Requires sudo mode verification for security-sensitive changes. Only default users can modify their own profile. A password change invalidates all existing sessions and returns the replacement session token.
          */
         patch: operations["update_current_user"];
         trace?: never;
@@ -4276,7 +4632,7 @@ export interface paths {
         put?: never;
         /**
          * Verify replacement email for bounced address
-         * @description Completes bounced-email recovery by verifying the replacement email code, updating the account email, and clearing email-related suspicious-activity requirements.
+         * @description Completes bounced-email recovery by verifying the replacement email code, and updating the account email.
          */
         post: operations["verify_bounced_email_replacement"];
         delete?: never;
@@ -5289,6 +5645,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/@me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change password
+         * @description Changes the password on instances where people sign in with a username. Requires sudo mode verification. Ends every other session, deletes the recovery kit and returns a token for a new session that replaces the current one. Fails with USERNAME_SIGN_IN_ONLY on email instances.
+         */
+        post: operations["update_current_user_password"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/@me/password-change/complete": {
         parameters: {
             query?: never;
@@ -5363,66 +5739,6 @@ export interface paths {
          * @description Verifies the email code sent during password change. Returns a proof token needed to complete the password change.
          */
         post: operations["verify_password_change_code"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/@me/phone/inbound-challenge": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Start an inbound SMS challenge
-         * @description When an account must verify its phone number inbound, the user texts a one-time code to the platform's number instead of receiving one. This endpoint generates the code and the destination number to display.
-         */
-        post: operations["start_inbound_phone_challenge"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/@me/phone/send-verification": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Send phone verification code
-         * @description Send a one-time code on the requested channel. Defaults to the first available channel from server policy. Pass channel="sms" to request SMS (only honoured for SMS-allowlisted destinations) or channel="inbound_challenge" to receive challenge details to text in. Expensive outbound destinations always downgrade to an inbound challenge. Requires a solved captcha challenge (X-Captcha-Token) when the phone verification service asks for one.
-         */
-        post: operations["send_phone_verification_code"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/@me/phone/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Verify phone code
-         * @description Verify a phone number by confirming the SMS verification code. Returns phone verification status.
-         */
-        post: operations["verify_phone_code"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5549,6 +5865,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/@me/recovery-kit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get recovery kit status
+         * @description Check whether the current account has a recovery kit and when it was created. Only available on instances where people sign in with a username. The recovery key itself is never returned here.
+         */
+        get: operations["get_recovery_kit_status"];
+        put?: never;
+        /**
+         * Create recovery kit
+         * @description Create a recovery kit for the current account and return its recovery key. The key is shown only once and any previous kit stops working. Only available on instances where people sign in with a username. Requires sudo mode verification.
+         */
+        post: operations["create_recovery_kit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/@me/relationships": {
         parameters: {
             query?: never;
@@ -5623,30 +5963,6 @@ export interface paths {
          * @description Updates the nickname associated with a relationship (friend or blocked user). Nicknames are personal labels that override the user's display name in the current user's view. Returns updated relationship object.
          */
         patch: operations["update_relationship_nickname"];
-        trace?: never;
-    };
-    "/users/@me/required-actions/phone-gate-escape": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Preview setting the deferred phone check aside
-         * @description Reports whether this account can set a due phone verification requirement aside. The community lists are always empty.
-         */
-        get: operations["get_phone_gate_escape"];
-        put?: never;
-        /**
-         * Set the deferred phone check aside
-         * @description Defers a due phone verification requirement again, so the account works normally without leaving any community. Returns the updated private user object.
-         */
-        post: operations["execute_phone_gate_escape"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/users/@me/saved-messages": {
@@ -5897,6 +6213,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/voice/p2p/connection-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Report peer-to-peer connection outcomes
+         * @description Records how peer connections of a peer-to-peer voice call settled, one report for each remote peer. Fluxer adds the request address, its country and the client platform of the session.
+         */
+        post: operations["create_voice_p2p_connection_reports"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/webhooks/{webhook_id}": {
         parameters: {
             query?: never;
@@ -5991,6 +6327,26 @@ export interface paths {
          * @description Receives and processes Instatus status page webhook events, formatting them as messages in the configured channel.
          */
         post: operations["execute_instatus_webhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/{webhook_id}/{token}/libredesk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Execute Libredesk webhook
+         * @description Receives and processes Libredesk help desk webhook events, formatting them as messages in the configured channel.
+         */
+        post: operations["execute_libredesk_webhook"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6098,7 +6454,7 @@ export interface components {
         /** Format: snowflake */
         SnowflakeType: string | number;
         Error: {
-            /** @description Machine-readable error code */
+            /** @description Machine-readable error code. Known values are listed in the APIErrorCode schema */
             code: string;
             /** @description Human-readable error message */
             message: string;
@@ -6115,7 +6471,7 @@ export interface components {
             [key: string]: unknown;
         };
         ThrottledError: {
-            /** @description Machine-readable error code */
+            /** @description Machine-readable error code. Known values are listed in the APIErrorCode schema */
             code: string;
             /** @description Human-readable error message */
             message: string;
@@ -6193,7 +6549,7 @@ export interface components {
             message_reference?: {
                 /** @description The ID of the channel containing the referenced message */
                 channel_id: components["schemas"]["SnowflakeStringType"];
-                /** @description The ID of the referenced message, absent on a channel follow system message */
+                /** @description The ID of the referenced message, absent on a channel follow system message and on thread created messages that reference only a thread */
                 message_id?: components["schemas"]["SnowflakeStringType"] | null;
                 /** @description The ID of the guild containing the referenced message */
                 guild_id?: components["schemas"]["SnowflakeStringType"] | null;
@@ -6210,7 +6566,9 @@ export interface components {
                 /** @description The ISO 8601 timestamp of when the call ended */
                 ended_timestamp?: string | null;
             } | null;
-            /** @description The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message carries no default reference. Clients must tell null apart from absent by key presence. */
+            /** @description The thread started from this message, when the viewer can see threads */
+            thread?: components["schemas"]["ThreadChannelResponse"];
+            /** @description The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message has no default reference. Clients must tell null apart from absent by key presence. */
             referenced_message?: {
                 /** @description The unique identifier (snowflake) for this message */
                 id: components["schemas"]["SnowflakeStringType"];
@@ -6258,7 +6616,7 @@ export interface components {
                 message_reference?: {
                     /** @description The ID of the channel containing the referenced message */
                     channel_id: components["schemas"]["SnowflakeStringType"];
-                    /** @description The ID of the referenced message, absent on a channel follow system message */
+                    /** @description The ID of the referenced message, absent on a channel follow system message and on thread created messages that reference only a thread */
                     message_id?: components["schemas"]["SnowflakeStringType"] | null;
                     /** @description The ID of the guild containing the referenced message */
                     guild_id?: components["schemas"]["SnowflakeStringType"] | null;
@@ -6275,7 +6633,54 @@ export interface components {
                     /** @description The ISO 8601 timestamp of when the call ended */
                     ended_timestamp?: string | null;
                 } | null;
+                /** @description The thread started from this message, when the viewer can see threads */
+                thread?: components["schemas"]["ThreadChannelResponse"];
             } | null;
+        };
+        LibredeskWebhook: {
+            event: string;
+            payload: {
+                uuid?: string | null;
+                reference_number?: string | null;
+                subject?: string | null;
+                inbox_name?: string | null;
+                contact?: {
+                    first_name?: string | null;
+                    last_name?: string | null;
+                } | null;
+                conversation_uuid?: string | null;
+                conversation?: {
+                    uuid?: string | null;
+                    reference_number?: string | null;
+                    subject?: string | null;
+                    inbox_name?: string | null;
+                    status_category?: string | null;
+                } | null;
+                previous_status?: string | null;
+                new_status?: string | null;
+                snooze_until?: string | null;
+                previous_tags?: string[] | null;
+                new_tags?: string[] | null;
+                assigned_to?: components["schemas"]["NonNegativeSafeIntegerType"] | null;
+                type?: string | null;
+                status?: string | null;
+                text_content?: string | null;
+                private?: boolean | null;
+                sender_type?: string | null;
+                meta?: {
+                    is_automated?: boolean | null;
+                    is_csat?: boolean | null;
+                    continuity_email?: boolean | null;
+                } | null;
+                attachments?: {
+                    name?: string | null;
+                }[] | null;
+                author?: {
+                    first_name?: string | null;
+                    last_name?: string | null;
+                } | null;
+                name?: string | null;
+            };
         };
         InstatusWebhook: {
             meta?: {
@@ -6564,6 +6969,10 @@ export interface components {
                 /** @description Attachment flags bitfield */
                 flags?: components["schemas"]["MessageAttachmentFlags"];
             }[];
+            /** @description Name of the post to create when the webhook belongs to a forum or media channel (1-100 characters) */
+            thread_name?: string;
+            /** @description IDs of the tags to apply to the new post (max 5) */
+            applied_tags?: components["schemas"]["SnowflakeType"][];
         };
         WebhookMessageRequest: {
             content?: components["schemas"]["MessageContentRequest"] | null;
@@ -6591,6 +7000,10 @@ export interface components {
             avatar_url?: string | null;
             /** @description Array of attachments uploaded through the presigned upload endpoint */
             attachments?: components["schemas"]["ClientUploadedAttachmentRequest"][];
+            /** @description Name of the post to create when the webhook belongs to a forum or media channel (1-100 characters) */
+            thread_name?: string;
+            /** @description IDs of the tags to apply to the new post (max 5) */
+            applied_tags?: components["schemas"]["SnowflakeType"][];
         };
         WebhookTokenUpdateRequest: {
             /** @description The new name of the webhook */
@@ -6653,6 +7066,34 @@ export interface components {
                 /** @description The name of the followed announcement channel */
                 name: string;
             };
+        };
+        VoiceP2pConnectionReportsRequest: {
+            /** @description One report for each remote peer that settled */
+            reports: {
+                /** @description The voice channel or private channel of the call */
+                channel_id: components["schemas"]["SnowflakeType"];
+                /** @description The guild of the voice channel, null for a call */
+                guild_id: components["schemas"]["SnowflakeType"] | null;
+                /** @description Participants in the call when the peer connection settled */
+                participant_count: number;
+                /**
+                 * @description How the peer connection settled
+                 * @enum {string}
+                 */
+                outcome: "connected" | "failed";
+                /** @description Local candidate type, null without a selected pair */
+                local_candidate_type: ("host" | "srflx" | "prflx" | "relay") | null;
+                /** @description Remote candidate type, null without a selected pair */
+                remote_candidate_type: ("host" | "srflx" | "prflx" | "relay") | null;
+                /** @description Address family of the selected pair, null without one */
+                ip_family: ("ipv4" | "ipv6") | null;
+                /** @description Transport protocol of the selected pair, null without one */
+                protocol: ("udp" | "tcp") | null;
+                /** @description Milliseconds from peer connection creation to first connected */
+                setup_ms: components["schemas"]["Int32Type"] | null;
+                /** @description Whether the peer connection ran an ICE restart */
+                ice_restarted: boolean;
+            }[];
         };
         EntranceSoundPlayRequest: {
             sound_id: components["schemas"]["SnowflakeType"];
@@ -6774,9 +7215,7 @@ export interface components {
             email: string | null;
             /** @description Whether the current email address is marked as bounced by the mail provider */
             email_bounced?: boolean;
-            /** @description Always null. Retained for old-client backward compatibility — phone numbers are no longer stored on the user record. */
-            phone?: string | null;
-            /** @description Whether this account has completed phone verification */
+            /** @description Deprecated. Always false. */
             has_verified_phone: boolean;
             /** @description The user biography text */
             bio: string | null;
@@ -6797,6 +7236,8 @@ export interface components {
             authenticator_types?: components["schemas"]["UserAuthenticatorTypes"][];
             /** @description Whether the email address has been verified */
             verified: boolean;
+            /** @description Whether the account is limited */
+            account_limited?: boolean;
             premium_type: components["schemas"]["UserPremiumTypes"] | null;
             /** @description ISO8601 timestamp of when premium was first activated */
             premium_since: string | null;
@@ -6826,13 +7267,11 @@ export interface components {
             premium_enabled_override: boolean;
             /** @description Whether premium perks are temporarily disabled for this account */
             premium_perks_disabled: boolean;
-            /** @description Whether this account is forced through the inbound phone verification flow, for debugging */
-            force_inbound_phone_verification?: boolean;
             /** @description ISO8601 timestamp of the last password change */
             password_last_changed_at: string | null;
             /** @description ISO8601 timestamp of the last bulk voice-activity-sharing change. Drives the 24-hour cooldown for re-toggling the Active Now sharing default. */
             last_voice_activity_sharing_change_at: string | null;
-            /** @description Actions the user must complete before full access */
+            /** @description Deprecated. Always empty. */
             required_actions: string[];
             /** @description Whether the user is allowed to view NSFW content */
             nsfw_allowed: boolean;
@@ -6969,6 +7408,8 @@ export interface components {
             profile_privacy?: components["schemas"]["ProfilePrivacyLevelInput"];
             /** @description Default share_voice_activity applied to new friend relationships */
             default_share_voice_activity?: boolean;
+            /** @description Version of the privacy setup the user just reviewed. The server also records privacy_setup_completed_at as the current time. */
+            privacy_setup_version?: number;
             /** @description Account-wide client preferences as a base64-encoded protobuf snapshot. Replaces the entire stored snapshot; pass null to clear it. */
             synced_preferences?: string | null;
         };
@@ -7058,6 +7499,10 @@ export interface components {
             profile_privacy: components["schemas"]["ProfilePrivacyLevel"];
             /** @description Default value of share_voice_activity applied to newly accepted friend relationships. Read-only here; mutated via PUT /users/@me/settings/voice-activity-sharing. */
             default_share_voice_activity: boolean;
+            /** @description Latest privacy setup version the user has reviewed, 0 if never reviewed */
+            privacy_setup_version: number;
+            /** @description When the user last completed the privacy setup, or null if never */
+            privacy_setup_completed_at: string | null;
         };
         SaveMessageRequest: {
             /** @description The ID of the channel containing the message */
@@ -7066,24 +7511,6 @@ export interface components {
             message_id: components["schemas"]["SnowflakeType"];
         };
         SavedMessageEntryListResponse: components["schemas"]["SavedMessageEntryResponse"][];
-        PhoneGateEscapePreviewResponse: {
-            /** @description Whether this account can set a due phone verification requirement aside right now */
-            available: boolean;
-            /** @description Always empty, the escape leaves no community */
-            guilds: {
-                /** @description The unique identifier (snowflake) for the community */
-                id: components["schemas"]["SnowflakeStringType"];
-                /** @description The community name */
-                name: string;
-            }[];
-            /** @description Always empty, the escape leaves no community */
-            owned_guilds: {
-                /** @description The unique identifier (snowflake) for the community */
-                id: components["schemas"]["SnowflakeStringType"];
-                /** @description The community name */
-                name: string;
-            }[];
-        };
         RelationshipNicknameUpdateRequest: {
             /** @description Custom nickname for this friend (max 256 characters) */
             nickname: string | null;
@@ -7133,6 +7560,36 @@ export interface components {
             discriminator: components["schemas"]["DiscriminatorType"];
         };
         RelationshipListResponse: components["schemas"]["RelationshipResponse"][];
+        SudoVerificationSchema: {
+            /** @description Account password for sudo verification */
+            password?: components["schemas"]["PasswordType"];
+            /**
+             * @description MFA method to use for verification
+             * @enum {string}
+             */
+            mfa_method?: "totp" | "webauthn";
+            /** @description MFA verification code from an authenticator app */
+            mfa_code?: string;
+            /** @description WebAuthn authentication response */
+            webauthn_response?: components["schemas"]["WebAuthnAuthenticationResponse"];
+            /** @description WebAuthn challenge string */
+            webauthn_challenge?: string;
+        };
+        RecoveryKitCreateResponse: {
+            /** @description New recovery key as 8 groups of 4 joined by dashes, shown only once. Any previous kit stops working */
+            recovery_key: string;
+            /**
+             * Format: date-time
+             * @description ISO 8601 timestamp when the recovery kit was created
+             */
+            created_at: string;
+        };
+        RecoveryKitStatusResponse: {
+            /** @description Whether the account has a recovery kit */
+            has_recovery_kit: boolean;
+            /** @description ISO 8601 timestamp when the current recovery kit was created */
+            created_at: string | null;
+        };
         SuccessResponse: {
             /**
              * @description Whether the operation succeeded
@@ -7193,63 +7650,6 @@ export interface components {
         PreloadMessagesResponse: {
             [key: string]: components["schemas"]["MessageResponseSchema"] | null;
         };
-        PhoneVerifyRequest: {
-            /** @description Phone number being verified */
-            phone: components["schemas"]["PhoneNumberType"];
-            /** @description The verification code */
-            code: string;
-        };
-        PhoneVerifyResponse: {
-            /**
-             * @description Indicates the phone number was verified successfully
-             * @constant
-             */
-            verified: true;
-        };
-        PhoneSendVerificationRequest: {
-            /** @description Phone number to send verification code */
-            phone: components["schemas"]["PhoneNumberType"];
-            /**
-             * @description Channel to deliver the OTP on. Defaults to the first available channel from server policy. Server may override to an available fallback when the requested channel is disabled.
-             * @enum {string}
-             */
-            channel?: "sms" | "inbound_challenge";
-        };
-        PhoneSendVerificationResponse: {
-            /**
-             * @description Channel actually used for delivery (may differ from request when server adjusts)
-             * @constant
-             */
-            channel: "sms";
-        } | {
-            /**
-             * @description The user must send Fluxer an SMS instead of receiving one
-             * @constant
-             */
-            channel: "inbound_challenge";
-            /** @description The numeric code the user must text to our number */
-            challenge_code: string;
-            /** @description The Twilio number the user must text the code to (E.164) */
-            our_number: string;
-            /**
-             * Format: date-time
-             * @description ISO 8601 timestamp when this inbound challenge expires
-             */
-            expires_at: string;
-            /**
-             * @description Always verification_required
-             * @enum {string}
-             */
-            reason: "verification_required";
-        };
-        InboundSmsChallengeStartResponse: {
-            /** @description The numeric code the user must text to our number */
-            challenge_code: string;
-            /** @description The Twilio number the user must text the code to (E.164) */
-            our_number: string;
-            /** @description ISO timestamp at which the challenge becomes invalid */
-            expires_at: string;
-        };
         PasswordChangeVerifyRequest: {
             /** @description Password change ticket identifier */
             ticket: string;
@@ -7281,6 +7681,29 @@ export interface components {
             new_password: components["schemas"]["PasswordType"];
         };
         PasswordChangeCompleteResponse: {
+            /** @description Authentication token for the newly created session */
+            token: string;
+            /** @description Base64url-encoded hash of the newly created authentication session */
+            auth_session_id_hash: string;
+        };
+        UserPasswordUpdateRequest: {
+            /** @description The new password to set */
+            new_password: components["schemas"]["PasswordType"];
+            /** @description Account password for sudo verification */
+            password?: components["schemas"]["PasswordType"];
+            /**
+             * @description MFA method to use for verification
+             * @enum {string}
+             */
+            mfa_method?: "totp" | "webauthn";
+            /** @description MFA verification code from an authenticator app */
+            mfa_code?: string;
+            /** @description WebAuthn authentication response */
+            webauthn_response?: components["schemas"]["WebAuthnAuthenticationResponse"];
+            /** @description WebAuthn challenge string */
+            webauthn_challenge?: string;
+        };
+        UserPasswordUpdateResponse: {
             /** @description Authentication token for the newly created session */
             token: string;
             /** @description Base64url-encoded hash of the newly created authentication session */
@@ -7417,21 +7840,6 @@ export interface components {
                 /** @description Whether the passkey was used from another device */
                 cross_device: boolean;
             } | null;
-        };
-        SudoVerificationSchema: {
-            /** @description Account password for sudo verification */
-            password?: components["schemas"]["PasswordType"];
-            /**
-             * @description MFA method to use for verification
-             * @enum {string}
-             */
-            mfa_method?: "totp" | "webauthn";
-            /** @description MFA verification code from an authenticator app */
-            mfa_code?: string;
-            /** @description WebAuthn authentication response */
-            webauthn_response?: components["schemas"]["WebAuthnAuthenticationResponse"];
-            /** @description WebAuthn challenge string */
-            webauthn_challenge?: string;
         };
         WebAuthnCredentialUpdateRequest: {
             /** @description New name for the credential */
@@ -7821,6 +8229,8 @@ export interface components {
                     } | null;
                     /** @description Unread badges level override for this channel (null = inherit) */
                     unread_badges?: components["schemas"]["UserNotificationSettingsInput"] | null;
+                    /** @description Channel override flags (NEW_FORUM_THREADS_OFF 1<<13, NEW_FORUM_THREADS_ON 1<<14) */
+                    flags?: components["schemas"]["Int32Type"];
                 };
             } | null;
             /** @description Default unread badges level for the guild (null = follows message_notifications) */
@@ -7866,6 +8276,8 @@ export interface components {
                     } | null;
                     /** @description Unread badges level override for this channel (null = inherit) */
                     unread_badges?: components["schemas"]["UserNotificationSettings"] | null;
+                    /** @description Channel override flags (NEW_FORUM_THREADS_OFF 1<<13, NEW_FORUM_THREADS_ON 1<<14) */
+                    flags?: components["schemas"]["Int32Type"];
                 };
             } | null;
             /** @description Default unread badges level for the guild (null = follows message_notifications) */
@@ -8105,6 +8517,8 @@ export interface components {
             voice_connection_limit?: components["schemas"]["Int32Type"] | null;
             /** @description The voice region ID for the voice channel */
             rtc_region?: string | null;
+            /** @description Whether calls in the voice channel connect participants directly instead of through a voice server */
+            rtc_p2p?: boolean;
             /** @description The ID of the last message sent in this channel */
             last_message_id?: components["schemas"]["SnowflakeStringType"] | null;
             /** @description The ISO 8601 timestamp of when the last pinned message was pinned */
@@ -8127,6 +8541,39 @@ export interface components {
             nicks?: {
                 [key: string]: string;
             };
+            /** @description Channel flags */
+            flags?: components["schemas"]["Int32Type"];
+            /** @description Thread-specific fields */
+            thread_metadata?: components["schemas"]["ThreadMetadataResponse"];
+            /** @description IDs of the tags applied to a forum or media post */
+            applied_tags?: components["schemas"]["SnowflakeStringType"][];
+            /** @description Messages in the thread, excluding the starter and deleted messages */
+            message_count?: components["schemas"]["Int32Type"];
+            /** @description Messages ever sent in the thread, never decremented */
+            total_message_sent?: components["schemas"]["Int32Type"];
+            /** @description Approximate number of thread members, capped at 50 */
+            member_count?: components["schemas"]["Int32Type"];
+            /** @description IDs of the most recently joined members of a forum or media post, newest first */
+            member_ids_preview?: components["schemas"]["SnowflakeStringType"][];
+            /** @description The thread member object for the current user */
+            member?: components["schemas"]["ThreadMemberResponse"];
+            /** @description Default auto archive duration for new threads */
+            default_auto_archive_duration?: components["schemas"]["Int32Type"] | null;
+            /** @description Slowmode copied onto new threads */
+            default_thread_rate_limit_per_user?: components["schemas"]["Int32Type"];
+            /** @description Tags that can be applied to posts */
+            available_tags?: components["schemas"]["ForumTagResponse"][];
+            /** @description Default reaction for posts */
+            default_reaction_emoji?: components["schemas"]["DefaultReactionEmojiResponse"] | null;
+            /** @description Default sort order for posts */
+            default_sort_order?: components["schemas"]["Int32Type"] | null;
+            /** @description Default layout for forum posts */
+            default_forum_layout?: components["schemas"]["Int32Type"];
+            /**
+             * @description Default tag search setting
+             * @enum {string}
+             */
+            default_tag_setting?: "match_some" | "match_all";
         };
         ChannelListResponse: components["schemas"]["ChannelResponse"][];
         ApplicationListResponse: components["schemas"]["ApplicationResponse"][];
@@ -8190,6 +8637,124 @@ export interface components {
             /** @description WebAuthn challenge string */
             webauthn_challenge?: string;
         };
+        UserUpdateResponse: {
+            /** @description The unique identifier (snowflake) for this user */
+            id: components["schemas"]["SnowflakeStringType"];
+            /** @description The username of the user, not unique across the platform */
+            username: string;
+            /** @description The four-digit discriminator tag of the user */
+            discriminator: string;
+            /** @description The display name of the user, if set */
+            global_name: string | null;
+            /** @description The hash of the user avatar image */
+            avatar: string | null;
+            /** @description The dominant avatar color of the user as an integer */
+            avatar_color: components["schemas"]["Int32Type"] | null;
+            /** @description Whether the user is a bot account */
+            bot?: boolean;
+            /** @description Whether the user is an official system user */
+            system?: boolean;
+            flags: components["schemas"]["PublicUserFlags"];
+            /** @description The user's account-wide reply mention preference. Omitted when the user has no preference set (treated as NO_PREFERENCE). */
+            mention_flags?: components["schemas"]["MentionReplyPreferences"];
+            /** @description Whether the user has staff permissions */
+            is_staff: boolean;
+            /** @description Access control list entries for the user */
+            acls: string[];
+            /** @description Special traits assigned to the user account */
+            traits: string[];
+            /** @description The email address associated with the account */
+            email: string | null;
+            /** @description Whether the current email address is marked as bounced by the mail provider */
+            email_bounced?: boolean;
+            /** @description Deprecated. Always false. */
+            has_verified_phone: boolean;
+            /** @description The user biography text */
+            bio: string | null;
+            /** @description The preferred pronouns of the user */
+            pronouns: string | null;
+            /** @description The user-selected accent color as an integer */
+            accent_color: components["schemas"]["Int32Type"] | null;
+            /** @description The IANA timezone identifier saved by the user */
+            timezone?: string | null;
+            timezone_privacy_flags?: components["schemas"]["ProfileFieldPrivacyFlags"];
+            /** @description The hash of the user profile banner image */
+            banner: string | null;
+            /** @description The default banner color if no custom banner is set */
+            banner_color: components["schemas"]["Int32Type"] | null;
+            /** @description Whether multi-factor authentication is enabled */
+            mfa_enabled: boolean;
+            /** @description The types of authenticators configured for MFA */
+            authenticator_types?: components["schemas"]["UserAuthenticatorTypes"][];
+            /** @description Whether the email address has been verified */
+            verified: boolean;
+            /** @description Whether the account is limited */
+            account_limited?: boolean;
+            premium_type: components["schemas"]["UserPremiumTypes"] | null;
+            /** @description ISO8601 timestamp of when premium was first activated */
+            premium_since: string | null;
+            /** @description ISO8601 timestamp of when premium access ends, including stacked gift time */
+            premium_until: string | null;
+            /** @description Whether premium is set to cancel at the end of the billing period */
+            premium_will_cancel: boolean;
+            /** @description The billing cycle for the premium subscription */
+            premium_billing_cycle: string | null;
+            /** @description The sequence number for lifetime premium subscribers */
+            premium_lifetime_sequence: components["schemas"]["Int32Type"] | null;
+            /** @description ISO8601 timestamp at which grace access ends after premium_until passes: after a failed renewal payment (7 days from the renewal for monthly plans, 14 for yearly), after a subscription ends (3 days), or during an App Store or Google Play grace period. Perks stay active and the original premium_since is kept on resubscribe until this timestamp passes. Null when no grace is recorded, in which case access lasts 3 days after premium_until. */
+            premium_grace_ends_at: string | null;
+            /** @description Whether the user selected a premium-only discriminator that will be rerolled when non-lifetime premium access ends */
+            premium_discriminator: boolean;
+            /** @description Whether the premium badge is hidden on the profile */
+            premium_badge_hidden: boolean;
+            /** @description Whether the premium badge shows a masked appearance */
+            premium_badge_masked: boolean;
+            /** @description Whether the premium start timestamp is hidden */
+            premium_badge_timestamp_hidden: boolean;
+            /** @description Whether the lifetime sequence number is hidden */
+            premium_badge_sequence_hidden: boolean;
+            /** @description Whether premium purchases are disabled for this account */
+            premium_purchase_disabled: boolean;
+            /** @description Whether premium features are enabled via override */
+            premium_enabled_override: boolean;
+            /** @description Whether premium perks are temporarily disabled for this account */
+            premium_perks_disabled: boolean;
+            /** @description ISO8601 timestamp of the last password change */
+            password_last_changed_at: string | null;
+            /** @description ISO8601 timestamp of the last bulk voice-activity-sharing change. Drives the 24-hour cooldown for re-toggling the Active Now sharing default. */
+            last_voice_activity_sharing_change_at: string | null;
+            /** @description Deprecated. Always empty. */
+            required_actions: string[];
+            /** @description Whether the user is allowed to view NSFW content */
+            nsfw_allowed: boolean;
+            /** @description Whether the user has dismissed the premium onboarding flow */
+            has_dismissed_premium_onboarding: boolean;
+            /** @description Whether the user has ever made a purchase */
+            has_ever_purchased: boolean;
+            /** @description Whether there are unread items in the gift inventory */
+            has_unread_gift_inventory: boolean;
+            /** @description The number of unread gift inventory items */
+            unread_gift_inventory_count: components["schemas"]["Int32Type"];
+            /** @description Information about a pending bulk message deletion request. Only populated when the legacy delayed-deletion flow is in progress; the new immediate-deletion flow does not surface a pending state here. */
+            pending_bulk_message_deletion: {
+                /** @description ISO8601 timestamp of when the deletion was scheduled */
+                scheduled_at: string;
+                /** @description The number of channels with messages to delete */
+                channel_count: components["schemas"]["Int32Type"];
+                /** @description The total number of messages to delete */
+                message_count: components["schemas"]["Int32Type"];
+            } | null;
+            /** @description Whether the user has verified their age as an adult via credit card verification */
+            age_verified_adult?: boolean;
+            /** @description ISO8601 timestamp of when the user last agreed to the terms of service */
+            terms_agreed_at: string | null;
+            /** @description ISO8601 timestamp of when the user last agreed to the privacy policy */
+            privacy_agreed_at: string | null;
+            /** @description Authentication token for the replacement session, present when the password was changed */
+            token?: string;
+            /** @description Base64url-encoded hash of the replacement authentication session, present when the password was changed */
+            auth_session_id_hash?: string;
+        };
         UnfurlRequest: {
             /** @description The URL to unfurl */
             url: string;
@@ -8221,11 +8786,6 @@ export interface components {
             /** @description Whether the webhook was successfully received */
             received: boolean;
         };
-        LocalizedCardPreapprovalContinueRequest: {
-            /** @description Continuation token for the localized card preapproval flow */
-            token: string;
-        };
-        LocalizedCardPreapprovalContinueResponse: components["schemas"]["PendingLocalizedCardPreapprovalContinueResponse"] | components["schemas"]["ReadyLocalizedCardPreapprovalContinueResponse"] | components["schemas"]["RejectedLocalizedCardPreapprovalContinueResponse"] | components["schemas"]["ExpiredLocalizedCardPreapprovalContinueResponse"];
         CreateCheckoutSessionRequest: {
             /** @description The Stripe price ID for the subscription plan */
             price_id: string;
@@ -8404,34 +8964,51 @@ export interface components {
              */
             indexing: true;
         };
-        ReportUserRequest: {
-            /** @description ID of the user being reported */
+        /**
+         * @description Where the flow is shown
+         * @enum {string}
+         */
+        ReportFlowSurface: "in_app" | "dsa";
+        /**
+         * @description Kind of entity a report flow is about
+         * @enum {string}
+         */
+        ReportFlowTargetType: "message" | "user" | "guild";
+        ReportFlowResponse: {
+            target_type: components["schemas"]["ReportFlowTargetType"];
+            surface: components["schemas"]["ReportFlowSurface"];
+            revision_hash: string;
+            /** @description Locale the copy was rendered in */
+            locale: string;
+            start_screen_id: string;
+            /** @description Community guidelines page, null when the instance has none */
+            guidelines_url: string | null;
+            screens: components["schemas"]["ReportFlowScreen"][];
+            notices: components["schemas"]["ReportFlowNotice"][];
+        };
+        ReportFlowUserSubmissionRequest: {
+            revision_hash: string;
+            steps: components["schemas"]["ReportFlowStep"][];
+            /** @description Language tag the reporter saw the flow in */
+            locale?: string;
             user_id: components["schemas"]["SnowflakeType"];
-            category: components["schemas"]["UserReportCategory"];
-            /** @description ID of the guild where the violation occurred */
             guild_id?: components["schemas"]["SnowflakeType"];
         };
         ReportResponse: {
             /** @description The unique identifier for this report */
             report_id: components["schemas"]["SnowflakeStringType"];
-            /** @description Current status of the report (pending, reviewed, resolved) */
+            /** @description Current status of the report (pending, resolved) */
             status: string;
             /** @description ISO 8601 timestamp when the report was submitted */
             reported_at: string;
         };
-        ReportMessageRequest: {
-            /** @description ID of the accessible channel containing the reported message */
+        ReportFlowMessageSubmissionRequest: {
+            revision_hash: string;
+            steps: components["schemas"]["ReportFlowStep"][];
+            /** @description Language tag the reporter saw the flow in */
+            locale?: string;
             channel_id: components["schemas"]["SnowflakeType"];
-            /** @description ID of the accessible message being reported */
             message_id: components["schemas"]["SnowflakeType"];
-            category: components["schemas"]["MessageReportCategory"];
-        };
-        ReportGuildRequest: {
-            /** @description ID of the guild being reported */
-            guild_id: components["schemas"]["SnowflakeType"];
-            category: components["schemas"]["GuildReportCategory"];
-            /** @description Invite code proving access to the guild (required when not a member of a non-discoverable guild) */
-            invite_code?: string;
         };
         DsaReportEmailVerifyRequest: {
             /** @description Email address that received the verification code */
@@ -8451,7 +9028,7 @@ export interface components {
             /** @description Whether the operation was successful */
             ok: boolean;
         };
-        DsaReportRequest: components["schemas"]["MessageDsaReportRequest"] | components["schemas"]["UserDsaReportRequest"] | components["schemas"]["GuildDsaReportRequest"];
+        DsaReportFlowRequest: components["schemas"]["MessageDsaReportFlowRequest"] | components["schemas"]["UserDsaReportFlowRequest"] | components["schemas"]["GuildDsaReportFlowRequest"];
         ReadStateAckBulkRequest: {
             /** @description Array of channel/message pairs to acknowledge */
             read_states: {
@@ -8994,6 +9571,19 @@ export interface components {
             ageBlockedGeos: components["schemas"]["GeoEntry"][];
         };
         InviteResponseSchema: components["schemas"]["GuildInviteResponse"] | components["schemas"]["GroupDmInviteResponse"];
+        InstanceAccountIdentityUpdateRequest: {
+            /** @description Sign-in method for the new instance */
+            mode: components["schemas"]["AccountIdentityModeSchema"];
+            /** @description How usernames are tagged. Defaults to none. Username sign-in accepts only none */
+            tag_style?: components["schemas"]["TagStyleSchema"];
+            /** @description Setup token of a new self-hosted instance. Required until the first admin account exists */
+            setup_token?: string | null;
+        };
+        InstanceAccountIdentityResponse: {
+            /** @description Sign-in method now in effect */
+            mode: components["schemas"]["AccountIdentityModeSchema"];
+            tag_style: components["schemas"]["TagStyleSchema"];
+        };
         /**
          * Format: binary
          * @description The ZIP archive containing the requested user data
@@ -9110,6 +9700,17 @@ export interface components {
             approximate_member_count?: components["schemas"]["Int32Type"];
             /** @description Approximate online member count (only when with_counts is true) */
             approximate_presence_count?: components["schemas"]["Int32Type"];
+            /**
+             * @description Present and true when threads, forum and media channels are active in this guild for the requesting client. Only set on the current user guild list
+             * @constant
+             */
+            threads_active?: true;
+        };
+        ActiveThreadsResponse: {
+            /** @description The active threads */
+            threads: components["schemas"]["ThreadChannelResponse"][];
+            /** @description A thread member object for each returned thread the user joined */
+            members: components["schemas"]["ThreadMemberResponse"][];
         };
         GuildStickerUpdateRequest: {
             /** @description The name of the sticker (2-30 characters) */
@@ -9487,7 +10088,7 @@ export interface components {
             /** @description Whether to sync permissions with the new parent */
             lock_permissions?: boolean;
         }[];
-        ChannelCreateRequest: components["schemas"]["GuildTextChannelCreateRequest"] | components["schemas"]["GuildAnnouncementChannelCreateRequest"] | components["schemas"]["GuildVoiceChannelCreateRequest"] | components["schemas"]["GuildCategoryChannelCreateRequest"] | components["schemas"]["GuildLinkChannelCreateRequest"];
+        ChannelCreateRequest: components["schemas"]["GuildTextChannelCreateRequest"] | components["schemas"]["GuildAnnouncementChannelCreateRequest"] | components["schemas"]["GuildVoiceChannelCreateRequest"] | components["schemas"]["GuildCategoryChannelCreateRequest"] | components["schemas"]["GuildLinkChannelCreateRequest"] | components["schemas"]["GuildForumChannelCreateRequest"] | components["schemas"]["GuildMediaChannelCreateRequest"];
         GuildBanCreateRequest: {
             /**
              * @description Number of days of messages to delete from the banned user (0-7). Deprecated in favor of delete_message_seconds.
@@ -9507,7 +10108,7 @@ export interface components {
          * @description The type of action that occurred
          * @enum {integer}
          */
-        AuditLogActionTypeInput: 1 | 10 | 11 | 12 | 13 | 14 | 15 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 30 | 31 | 32 | 40 | 41 | 42 | 50 | 51 | 52 | 60 | 61 | 62 | 90 | 91 | 92 | 72 | 73 | 74 | 75;
+        AuditLogActionTypeInput: 1 | 10 | 11 | 12 | 13 | 14 | 15 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 30 | 31 | 32 | 40 | 41 | 42 | 50 | 51 | 52 | 60 | 61 | 62 | 90 | 91 | 92 | 72 | 73 | 74 | 75 | 110 | 111 | 112;
         /** Format: int32 */
         Int32Type: number;
         GuildAuditLogListResponse: {
@@ -9517,6 +10118,8 @@ export interface components {
             users: components["schemas"]["UserPartialResponse"][];
             /** @description Webhooks referenced in the audit log entries */
             webhooks: components["schemas"]["AuditLogWebhookResponse"][];
+            /** @description Threads referenced in the audit log entries, when the viewer can see threads */
+            threads?: components["schemas"]["ThreadChannelResponse"][];
         };
         GuildUpdateRequest: {
             /** @description The name of the guild (1-100 characters) */
@@ -9617,7 +10220,9 @@ export interface components {
             poll_jitter_percent: number;
             assignments: {
                 domain_migration?: components["schemas"]["DomainMigrationAssignmentResponse"];
+                channel_threads?: components["schemas"]["ChannelThreadsAssignmentResponse"];
                 plutonium_page?: components["schemas"]["PlutoniumPageAssignmentResponse"];
+                voice_p2p?: components["schemas"]["VoiceP2pAssignmentResponse"];
             };
         };
         GuildEmojiMetadataResponse: {
@@ -9660,6 +10265,26 @@ export interface components {
              * @description Stripe checkout URL to redirect the user to
              */
             url: string;
+        };
+        DiscoveryChannelPreviewResponse: {
+            /** @description The discoverable guild the channel belongs to */
+            guild: {
+                /** @description Guild ID */
+                id: components["schemas"]["SnowflakeStringType"];
+                /** @description Guild name */
+                name: string;
+                /** @description Guild icon hash */
+                icon: string | null;
+            };
+            /** @description A channel that new members can view */
+            channel: {
+                /** @description Channel ID */
+                id: components["schemas"]["SnowflakeStringType"];
+                /** @description Channel name */
+                name: string | null;
+                /** @description Channel type */
+                type: number;
+            };
         };
         DiscoveryGuildListResponse: {
             /** @description Discovery guild results */
@@ -9723,6 +10348,189 @@ export interface components {
             /** @description The user who created the webhook */
             user: components["schemas"]["UserPartialResponse"];
         };
+        ArchivedThreadsResponse: {
+            /** @description The archived threads */
+            threads: components["schemas"]["ThreadChannelResponse"][];
+            /** @description A thread member object for each returned thread the user joined */
+            members: components["schemas"]["ThreadMemberResponse"][];
+            /** @description Whether there are potentially more threads to fetch */
+            has_more: boolean;
+        };
+        /**
+         * @description The direction to sort
+         * @enum {string}
+         */
+        ThreadSearchSortOrderSchema: "asc" | "desc";
+        /**
+         * @description The sorting algorithm to use
+         * @enum {string}
+         */
+        ThreadSearchSortBySchema: "last_message_time" | "archive_time" | "relevance" | "creation_time";
+        /**
+         * @description How posts are filtered when searching by several tags
+         * @enum {string}
+         */
+        ForumTagSettingSchema: "match_some" | "match_all";
+        SearchIndexNotReadyResponse: {
+            /**
+             * @description Machine-readable code of the response
+             * @constant
+             */
+            code: "SEARCH_INDEX_NOT_READY";
+            /** @description Human-readable description of the response */
+            message: string;
+            /** @description Always 0 while the index is being built */
+            documents_indexed: components["schemas"]["Int32Type"];
+            /** @description Seconds to wait before retrying the search */
+            retry_after: number;
+        };
+        ThreadSearchResult: components["schemas"]["ThreadSearchResponse"] | components["schemas"]["SearchIndexNotReadyResponse"];
+        StartThreadMultipartRequest: {
+            /** @description The JSON-encoded request body */
+            payload_json: string;
+            /**
+             * Format: binary
+             * @description A file for the first message of a post, referenced by attachment id 0. Further files go in files[1], files[2] and so on
+             */
+            "files[0]"?: string;
+        };
+        StartThreadRequestBody: components["schemas"]["StartThreadRequest"] | components["schemas"]["StartForumThreadRequest"];
+        StartForumThreadResponse: {
+            /** @description The unique identifier (snowflake) for this channel */
+            id: components["schemas"]["SnowflakeStringType"];
+            /** @description The ID of the guild this channel belongs to */
+            guild_id?: components["schemas"]["SnowflakeStringType"];
+            /** @description The name of the channel */
+            name?: string | null;
+            /** @description The topic of the channel */
+            topic?: string | null;
+            /** @description The URL associated with the channel */
+            url?: string | null;
+            /** @description The icon hash of the channel (for group DMs) */
+            icon?: string | null;
+            /** @description The ID of the owner of the channel (for group DMs) */
+            owner_id?: components["schemas"]["SnowflakeStringType"] | null;
+            type: components["schemas"]["ChannelType"];
+            /** @description The sorting position of the channel */
+            position?: components["schemas"]["Int32Type"];
+            /** @description The ID of the parent category for this channel */
+            parent_id?: components["schemas"]["SnowflakeStringType"] | null;
+            /** @description The bitrate of the voice channel in bits per second */
+            bitrate?: components["schemas"]["Int32Type"] | null;
+            /** @description The maximum number of users allowed in the voice channel */
+            user_limit?: components["schemas"]["Int32Type"] | null;
+            /** @description The maximum active voice connections allowed per user in the voice channel */
+            voice_connection_limit?: components["schemas"]["Int32Type"] | null;
+            /** @description The voice region ID for the voice channel */
+            rtc_region?: string | null;
+            /** @description Whether calls in the voice channel connect participants directly instead of through a voice server */
+            rtc_p2p?: boolean;
+            /** @description The ID of the last message sent in this channel */
+            last_message_id?: components["schemas"]["SnowflakeStringType"] | null;
+            /** @description The ISO 8601 timestamp of when the last pinned message was pinned */
+            last_pin_timestamp?: string | null;
+            /** @description The permission overwrites for this channel */
+            permission_overwrites?: components["schemas"]["ChannelOverwriteResponse"][];
+            /** @description The recipients of the DM channel */
+            recipients?: components["schemas"]["UserPartialResponse"][];
+            /** @description Whether the channel is marked as NSFW (effective value, walking channel → category → guild) */
+            nsfw?: boolean;
+            /** @description Per-channel adult-content override; null means inherit from parent category and then guild. Categories use this same field as their own override. */
+            nsfw_override?: boolean | null;
+            /** @description Channel-level content warning override (0=inherit, 1=force-warn) */
+            content_warning_level?: components["schemas"]["ContentWarningLevel"];
+            /** @description Custom channel content warning text (max 200 characters); null inherits from parent or guild */
+            content_warning_text?: string | null;
+            /** @description The slowmode rate limit in seconds */
+            rate_limit_per_user?: components["schemas"]["Int32Type"];
+            /** @description Custom nicknames for users in this channel (for group DMs) */
+            nicks?: {
+                [key: string]: string;
+            };
+            /** @description Channel flags */
+            flags?: components["schemas"]["Int32Type"];
+            /** @description Thread-specific fields */
+            thread_metadata?: components["schemas"]["ThreadMetadataResponse"];
+            /** @description IDs of the tags applied to a forum or media post */
+            applied_tags?: components["schemas"]["SnowflakeStringType"][];
+            /** @description Messages in the thread, excluding the starter and deleted messages */
+            message_count?: components["schemas"]["Int32Type"];
+            /** @description Messages ever sent in the thread, never decremented */
+            total_message_sent?: components["schemas"]["Int32Type"];
+            /** @description Approximate number of thread members, capped at 50 */
+            member_count?: components["schemas"]["Int32Type"];
+            /** @description IDs of the most recently joined members of a forum or media post, newest first */
+            member_ids_preview?: components["schemas"]["SnowflakeStringType"][];
+            /** @description The thread member object for the current user */
+            member?: components["schemas"]["ThreadMemberResponse"];
+            /** @description Default auto archive duration for new threads */
+            default_auto_archive_duration?: components["schemas"]["Int32Type"] | null;
+            /** @description Slowmode copied onto new threads */
+            default_thread_rate_limit_per_user?: components["schemas"]["Int32Type"];
+            /** @description Tags that can be applied to posts */
+            available_tags?: components["schemas"]["ForumTagResponse"][];
+            /** @description Default reaction for posts */
+            default_reaction_emoji?: components["schemas"]["DefaultReactionEmojiResponse"] | null;
+            /** @description Default sort order for posts */
+            default_sort_order?: components["schemas"]["Int32Type"] | null;
+            /** @description Default layout for forum posts */
+            default_forum_layout?: components["schemas"]["Int32Type"];
+            /**
+             * @description Default tag search setting
+             * @enum {string}
+             */
+            default_tag_setting?: "match_some" | "match_all";
+            /** @description The first message of the post */
+            message?: components["schemas"]["MessageResponseSchema"];
+        };
+        ThreadMemberResponse: {
+            /** @description The ID of the thread */
+            id?: components["schemas"]["SnowflakeStringType"];
+            /** @description The ID of the user */
+            user_id?: components["schemas"]["SnowflakeStringType"];
+            /**
+             * Format: date-time
+             * @description When the user last joined the thread
+             */
+            join_timestamp: string;
+            /** @description Thread member flags */
+            flags: components["schemas"]["Int32Type"];
+            /** @description Whether the user has muted the thread (current user only) */
+            muted?: boolean;
+            /** @description The mute configuration for the thread (current user only) */
+            mute_config?: {
+                /** @description ISO8601 timestamp of when the mute expires */
+                end_time: string | null;
+                /** @description The selected mute duration in seconds */
+                selected_time_window: components["schemas"]["Int32Type"];
+            } | null;
+            /** @description The guild member object for the user */
+            member?: components["schemas"]["GuildMemberResponse"];
+        };
+        ThreadMemberSettingsRequest: {
+            /** @description Thread member notification flags (ALL_MESSAGES 1<<1, ONLY_MENTIONS 1<<2, NO_MESSAGES 1<<3) */
+            flags?: components["schemas"]["Int32Type"];
+            /** @description Whether the thread is muted */
+            muted?: boolean;
+            /** @description Thread mute configuration */
+            mute_config?: {
+                /** @description When the mute expires */
+                end_time?: (string | number) | null;
+                /** @description Selected mute duration */
+                selected_time_window: number;
+            } | null;
+        };
+        ThreadMemberListResponse: components["schemas"]["ThreadMemberResponse"][];
+        ForumTagRequest: {
+            /** @description The name of the tag (1-50 characters) */
+            name: string;
+            /** @description Whether only moderators can add or remove this tag */
+            moderated?: boolean;
+            /** @description The ID of a custom guild emoji */
+            emoji_id?: components["schemas"]["SnowflakeType"] | null;
+            /** @description The unicode character of the emoji */
+            emoji_name?: string | null;
+        };
         ChannelSlowmodeStateResponse: {
             /** @description The configured slowmode interval in seconds (0 if disabled) */
             rate_limit_per_user: components["schemas"]["Int32Type"];
@@ -9734,6 +10542,16 @@ export interface components {
             can_bypass: boolean;
         };
         RtcRegionListResponse: components["schemas"]["RtcRegionResponse"][];
+        ThreadPostDataRequest: {
+            /** @description The IDs of the posts to get data for (max 100) */
+            thread_ids: components["schemas"]["SnowflakeType"][];
+        };
+        ThreadPostDataResponse: {
+            /** @description A mapping of post IDs to their post data */
+            threads: {
+                [key: string]: components["schemas"]["ThreadPostDataEntryResponse"];
+            };
+        };
         PermissionOverwriteCreateRequest: {
             /** @description The type of overwrite (0 = role, 1 = member) */
             type: components["schemas"]["ChannelOverwriteType"];
@@ -9741,6 +10559,99 @@ export interface components {
             allow?: components["schemas"]["UnsignedInt64Type"] | null;
             /** @description Bitwise value of denied permissions */
             deny?: components["schemas"]["UnsignedInt64Type"] | null;
+        };
+        StartThreadFromMessageRequest: {
+            /** @description The name of the thread (1-100 characters) */
+            name: string;
+            auto_archive_duration?: components["schemas"]["ThreadAutoArchiveDurationSchema"];
+            /** @description Seconds a user has to wait before sending another message (0-21600) */
+            rate_limit_per_user?: components["schemas"]["Int32Type"];
+        };
+        ThreadChannelResponse: {
+            /** @description The unique identifier (snowflake) for this channel */
+            id: components["schemas"]["SnowflakeStringType"];
+            /** @description The ID of the guild this channel belongs to */
+            guild_id?: components["schemas"]["SnowflakeStringType"];
+            /** @description The name of the channel */
+            name?: string | null;
+            /** @description The topic of the channel */
+            topic?: string | null;
+            /** @description The URL associated with the channel */
+            url?: string | null;
+            /** @description The icon hash of the channel (for group DMs) */
+            icon?: string | null;
+            /** @description The ID of the owner of the channel (for group DMs) */
+            owner_id?: components["schemas"]["SnowflakeStringType"] | null;
+            type: components["schemas"]["ChannelType"];
+            /** @description The sorting position of the channel */
+            position?: components["schemas"]["Int32Type"];
+            /** @description The ID of the parent category for this channel */
+            parent_id?: components["schemas"]["SnowflakeStringType"] | null;
+            /** @description The bitrate of the voice channel in bits per second */
+            bitrate?: components["schemas"]["Int32Type"] | null;
+            /** @description The maximum number of users allowed in the voice channel */
+            user_limit?: components["schemas"]["Int32Type"] | null;
+            /** @description The maximum active voice connections allowed per user in the voice channel */
+            voice_connection_limit?: components["schemas"]["Int32Type"] | null;
+            /** @description The voice region ID for the voice channel */
+            rtc_region?: string | null;
+            /** @description Whether calls in the voice channel connect participants directly instead of through a voice server */
+            rtc_p2p?: boolean;
+            /** @description The ID of the last message sent in this channel */
+            last_message_id?: components["schemas"]["SnowflakeStringType"] | null;
+            /** @description The ISO 8601 timestamp of when the last pinned message was pinned */
+            last_pin_timestamp?: string | null;
+            /** @description The permission overwrites for this channel */
+            permission_overwrites?: components["schemas"]["ChannelOverwriteResponse"][];
+            /** @description The recipients of the DM channel */
+            recipients?: components["schemas"]["UserPartialResponse"][];
+            /** @description Whether the channel is marked as NSFW (effective value, walking channel → category → guild) */
+            nsfw?: boolean;
+            /** @description Per-channel adult-content override; null means inherit from parent category and then guild. Categories use this same field as their own override. */
+            nsfw_override?: boolean | null;
+            /** @description Channel-level content warning override (0=inherit, 1=force-warn) */
+            content_warning_level?: components["schemas"]["ContentWarningLevel"];
+            /** @description Custom channel content warning text (max 200 characters); null inherits from parent or guild */
+            content_warning_text?: string | null;
+            /** @description The slowmode rate limit in seconds */
+            rate_limit_per_user?: components["schemas"]["Int32Type"];
+            /** @description Custom nicknames for users in this channel (for group DMs) */
+            nicks?: {
+                [key: string]: string;
+            };
+            /** @description Channel flags */
+            flags?: components["schemas"]["Int32Type"];
+            /** @description Thread-specific fields */
+            thread_metadata?: components["schemas"]["ThreadMetadataResponse"];
+            /** @description IDs of the tags applied to a forum or media post */
+            applied_tags?: components["schemas"]["SnowflakeStringType"][];
+            /** @description Messages in the thread, excluding the starter and deleted messages */
+            message_count?: components["schemas"]["Int32Type"];
+            /** @description Messages ever sent in the thread, never decremented */
+            total_message_sent?: components["schemas"]["Int32Type"];
+            /** @description Approximate number of thread members, capped at 50 */
+            member_count?: components["schemas"]["Int32Type"];
+            /** @description IDs of the most recently joined members of a forum or media post, newest first */
+            member_ids_preview?: components["schemas"]["SnowflakeStringType"][];
+            /** @description The thread member object for the current user */
+            member?: components["schemas"]["ThreadMemberResponse"];
+            /** @description Default auto archive duration for new threads */
+            default_auto_archive_duration?: components["schemas"]["Int32Type"] | null;
+            /** @description Slowmode copied onto new threads */
+            default_thread_rate_limit_per_user?: components["schemas"]["Int32Type"];
+            /** @description Tags that can be applied to posts */
+            available_tags?: components["schemas"]["ForumTagResponse"][];
+            /** @description Default reaction for posts */
+            default_reaction_emoji?: components["schemas"]["DefaultReactionEmojiResponse"] | null;
+            /** @description Default sort order for posts */
+            default_sort_order?: components["schemas"]["Int32Type"] | null;
+            /** @description Default layout for forum posts */
+            default_forum_layout?: components["schemas"]["Int32Type"];
+            /**
+             * @description Default tag search setting
+             * @enum {string}
+             */
+            default_tag_setting?: "match_some" | "match_all";
         };
         ReactionUsersPageResponse: {
             /** @description Users who reacted with the requested emoji */
@@ -9958,6 +10869,8 @@ export interface components {
             nicks?: components["schemas"]["ChannelNicknameOverrides"];
             /** @description Voice region ID for the voice channel (1-64 characters) */
             rtc_region?: string | null;
+            /** @description Whether calls in the voice channel connect participants directly instead of through a voice server */
+            rtc_p2p?: boolean;
             /** @description The name of the channel */
             name?: string | null;
             /** @description Convert between text (0) and announcement (5). Other conversions are rejected. */
@@ -10007,6 +10920,8 @@ export interface components {
             nicks?: components["schemas"]["ChannelNicknameOverrides"];
             /** @description Voice region ID for the voice channel (1-64 characters) */
             rtc_region?: string | null;
+            /** @description Whether calls in the voice channel connect participants directly instead of through a voice server */
+            rtc_p2p?: boolean;
             /** @description The name of the channel */
             name?: string | null;
             /** @description Convert between text (0) and announcement (5). Other conversions are rejected. */
@@ -10056,6 +10971,8 @@ export interface components {
             nicks?: components["schemas"]["ChannelNicknameOverrides"];
             /** @description Voice region ID for the voice channel (1-64 characters) */
             rtc_region?: string | null;
+            /** @description Whether calls in the voice channel connect participants directly instead of through a voice server */
+            rtc_p2p?: boolean;
             /** @description The name of the channel */
             name?: string | null;
         } | {
@@ -10103,6 +11020,8 @@ export interface components {
             nicks?: components["schemas"]["ChannelNicknameOverrides"];
             /** @description Voice region ID for the voice channel (1-64 characters) */
             rtc_region?: string | null;
+            /** @description Whether calls in the voice channel connect participants directly instead of through a voice server */
+            rtc_p2p?: boolean;
             /** @description The name of the category */
             name?: string | null;
         } | {
@@ -10150,6 +11069,8 @@ export interface components {
             nicks?: components["schemas"]["ChannelNicknameOverrides"];
             /** @description Voice region ID for the voice channel (1-64 characters) */
             rtc_region?: string | null;
+            /** @description Whether calls in the voice channel connect participants directly instead of through a voice server */
+            rtc_p2p?: boolean;
             /** @description The name of the channel */
             name?: string | null;
         } | {
@@ -10161,7 +11082,9 @@ export interface components {
             owner_id?: components["schemas"]["SnowflakeType"] | null;
             /** @description Custom nicknames for users in this group DM */
             nicks?: components["schemas"]["ChannelNicknameOverrides"] | null;
-        };
+            /** @description Whether the group DM is marked for mature content (owner only) */
+            nsfw?: boolean | null;
+        } | components["schemas"]["ChannelUpdatePublicThreadRequestBody"] | components["schemas"]["ChannelUpdatePrivateThreadRequestBody"] | components["schemas"]["ChannelUpdateThreadParentRequestBody"] | components["schemas"]["ChannelUpdateForumRequestBody"] | components["schemas"]["ChannelUpdateMediaRequestBody"];
         BulkMessageFetchRequest: {
             /** @description Per-channel message windows to fetch in one request */
             requests: {
@@ -10227,6 +11150,10 @@ export interface components {
         UsernameSuggestionsResponse: {
             /** @description List of suggested usernames */
             suggestions: string[];
+        };
+        UsernameAvailabilityResponse: {
+            /** @description Whether no other account holds this username */
+            available: boolean;
         };
         SsoStatusResponse: {
             /** @description Whether SSO is enabled for this instance */
@@ -10338,8 +11265,33 @@ export interface components {
              * @enum {string}
              */
             theme?: "dark" | "dark_legacy" | "coal" | "light" | "system";
+            /** @description Setup token of a new self-hosted instance. Required until the first admin account exists */
+            setup_token?: string | null;
         };
-        AuthRegisterResponse: components["schemas"]["AuthTokenWithUserIdResponse"] | {
+        AuthRegisterResponse: components["schemas"]["AuthTokenWithUserIdResponse"] | components["schemas"]["AuthRegistrationPendingApprovalResponse"];
+        RecoverAccountRequest: {
+            /** @description Username of the account to recover */
+            login: string;
+            /** @description Recovery key from the recovery kit. Spaces and dashes are ignored */
+            recovery_key: string;
+            /** @description New password to set */
+            password: components["schemas"]["PasswordType"];
+        };
+        RecoverAccountResponse: {
+            /** @description Authentication token for API requests */
+            token: string;
+            /** @description ID of the authenticated user */
+            user_id: components["schemas"]["SnowflakeStringType"];
+            /** @description Partial user data for the authenticated account */
+            user: components["schemas"]["UserPartialResponse"];
+            /** @description New recovery key as 8 groups of 4 joined by dashes. It replaces the one just used and is shown only once */
+            recovery_key: string;
+            /**
+             * Format: date-time
+             * @description ISO 8601 timestamp when the new recovery kit was created
+             */
+            recovery_kit_created_at: string;
+        } | {
             /**
              * @description Indicates MFA is required to complete authentication
              * @constant
@@ -10355,7 +11307,14 @@ export interface components {
             webauthn: boolean;
             /** @description Whether the account has at least one unconsumed backup code */
             backup_codes: boolean;
-        } | components["schemas"]["AuthRegistrationPendingApprovalResponse"];
+            /** @description New recovery key as 8 groups of 4 joined by dashes. It replaces the one just used and is shown only once */
+            recovery_key: string;
+            /**
+             * Format: date-time
+             * @description ISO 8601 timestamp when the new recovery kit was created
+             */
+            recovery_kit_created_at: string;
+        };
         PasskeyBridgeLoginRedeemResponse: components["schemas"]["CancelledPasskeyBridgeLoginRedeemResponse"] | components["schemas"]["CompletedPasskeyBridgeLoginRedeemResponse"];
         PasskeyBridgeOptionsResponse: {
             /** @description WebAuthn authentication options for the ceremony */
@@ -10422,8 +11381,10 @@ export interface components {
             ticket: string;
         };
         LoginRequest: {
-            /** @description Email address for authentication */
-            email: components["schemas"]["EmailType"];
+            /** @description Email address for authentication. Send this or login, not both */
+            email?: components["schemas"]["EmailType"];
+            /** @description Sign-in identifier. An email address on email instances, a username on username instances */
+            login?: string;
             /** @description Account password */
             password: components["schemas"]["PasswordType"];
             /** @description Guild invite code to join after login */
@@ -10442,9 +11403,11 @@ export interface components {
         HandoffStatusRequest: {
             /** @description The poll secret issued when the handoff was initiated */
             poll_secret: string;
+            /** @description The one-time grant delivered to the app through the deep link */
+            grant?: string;
         };
         HandoffStatusResponse: {
-            /** @description Current status of the handoff (pending, completed, expired) */
+            /** @description Current status of the handoff (pending, completed, denied, expired) */
             status: string;
             /** @description Authentication token if handoff is complete */
             token?: string | null;
@@ -10470,11 +11433,17 @@ export interface components {
                 /** @description The approximate location of the requesting device */
                 location?: components["schemas"]["AuthSessionLocation"] | null;
             } | null;
+            /** @description How the approving browser hands the sign-in back. deep_link opens the initiating app, code relies on the user comparing the code */
+            return_method?: components["schemas"]["DesktopHandoffReturnMethod"];
         };
         HandoffCancelRequest: {
             /** @description The poll secret issued when the handoff was initiated */
             poll_secret: string;
         };
+        HandoffInitiateRequest: {
+            /** @description Deep link the approving browser opens to return the sign-in to the initiating desktop app */
+            return_uri?: string;
+        } | null;
         HandoffInitiateResponse: {
             /** @description Handoff code to share with the receiving device */
             code: string;
@@ -10485,6 +11454,8 @@ export interface components {
             expires_at: string;
             /** @description Secret the initiating device must present to retrieve the token */
             poll_secret?: string;
+            /** @description deep_link when the approving browser will hand the sign-in back through the return deep link, code otherwise */
+            return_method?: components["schemas"]["DesktopHandoffReturnMethod"];
         };
         HandoffCompleteRequest: {
             /** @description The handoff code from the initiating session */
@@ -10493,6 +11464,12 @@ export interface components {
             token?: string;
             /** @description The user ID associated with the authenticated session */
             user_id: string;
+            /** @description deep_link returns a one-time grant the initiating app must present, code releases the token to the poll secret alone */
+            return_method?: components["schemas"]["DesktopHandoffReturnMethod"];
+        };
+        HandoffCompleteResponse: {
+            /** @description Deep link that returns the sign-in to the initiating app, with its one-time grant */
+            return_url: string;
         };
         ForgotPasswordRequest: {
             /** @description Email address to send password reset link */
@@ -10559,6 +11536,8 @@ export interface components {
             redirect_uris?: string[];
         };
         WellKnownFluxerResponse: {
+            /** @description Protocol generation spoken by this instance */
+            codename?: string;
             /** @description Version of the API server code */
             api_code_version: number;
             endpoints: components["schemas"]["InstanceEndpointsSchema"];
@@ -10600,6 +11579,7 @@ export interface components {
             push: components["schemas"]["InstancePushSchema"];
             /** @description Public application configuration for client-side features */
             app_public: components["schemas"]["InstanceAppPublicSchema"];
+            age_policy?: components["schemas"]["InstanceAgePolicySchema"];
             /** @description Web domain migration switch and anonymous rollout, only acted on by official instance clients */
             domain_migration?: components["schemas"]["DomainMigrationDiscoveryResponse"];
         };
@@ -10613,15 +11593,22 @@ export interface components {
             /** @description Whether installed desktop web apps forward to the new domain after moving their session */
             standalone_forwarding: boolean;
         };
+        /** @description Regional age policy for this instance */
+        InstanceAgePolicySchema: {
+            /** @description Regions with an age policy */
+            geos: components["schemas"]["InstanceAgePolicyGeoSchema"][];
+        };
         InstanceAppPublicSchema: {
             branding: components["schemas"]["InstanceBrandingSchema"];
             setup: components["schemas"]["InstanceSetupSchema"];
-            /** @description Optional legal document URLs shown during public registration */
+            /** @description Optional legal and policy document URLs shown to users */
             legal: {
                 /** @description Optional public terms of service URL for account registration */
                 terms_url: string | null;
                 /** @description Optional public privacy policy URL for account registration */
                 privacy_url: string | null;
+                /** @description Optional public community guidelines URL linked from reporting and enforcement notices */
+                guidelines_url: string | null;
             };
             /** @description Public registration field collection policy */
             registration: {
@@ -10635,6 +11622,10 @@ export interface components {
             configured: boolean;
             /** @description Admin panel URL to continue instance setup */
             admin_url: string | null;
+            /** @description Present only while a self-hosted instance is unconfigured. True when the sign-in method can no longer change */
+            account_identity_locked?: boolean;
+            /** @description Present only while a self-hosted instance is unconfigured. True when registration needs the setup token */
+            setup_token_required?: boolean;
         };
         /** @description Branding values safe to expose to clients */
         InstanceBrandingSchema: {
@@ -10665,6 +11656,14 @@ export interface components {
         InstancePushSchema: {
             /** @description VAPID public key for web push notifications */
             public_vapid_key: string | null;
+            /** @description How push notifications reach devices */
+            delivery_mode?: components["schemas"]["InstancePushDeliveryModeSchema"];
+            /** @description API path clients call to resolve the payload of a push event */
+            event_resolution_path?: string;
+            /** @description URL of the external push relay, if any */
+            external_relay_url?: string | null;
+            /** @description Hashes of the keys the external push relay signs with */
+            relay_signing_key_hashes?: string[] | null;
         };
         /** @description Optional third-party service integrations enabled for this instance */
         InstanceServicesSchema: {
@@ -10703,6 +11702,8 @@ export interface components {
             display_name: string | null;
             /** @description OAuth redirect URI for SSO */
             redirect_uri: string;
+            /** @description Whether an SSO provider is configured for this instance */
+            available?: boolean;
         };
         /** @description GIF provider configuration for clients */
         InstanceGifSchema: {
@@ -10729,8 +11730,18 @@ export interface components {
             presigned_attachment_uploads: boolean;
             /** @description Whether the instance sends emails (verification, password reset, etc.) */
             emails_enabled: boolean;
-            /** @description Whether users can verify a phone number, so the very high guild verification level applies */
+            /** @description Deprecated. Always false. */
             phone_verification_enabled: boolean;
+            /** @description Whether desktop clients may load downloadable modules */
+            desktop_modules_enabled?: boolean;
+            /** @description Hours between a deletion request and the permanent deletion of the account */
+            account_deletion_grace_period_hours?: number;
+            /** @description Maximum gateway connections a client may keep open for background accounts */
+            max_background_gateway_connections?: number;
+            /** @description How people sign in on this instance. Clients treat a missing value as email */
+            account_identity?: components["schemas"]["AccountIdentityModeSchema"];
+            /** @description How usernames are tagged. Clients treat a missing value as random */
+            tag_style?: components["schemas"]["TagStyleSchema"];
         };
         /** @description Captcha configuration */
         InstanceCaptchaSchema: {
@@ -10749,10 +11760,14 @@ export interface components {
             gateway: string;
             /** @description Base URL for the media proxy */
             media: string;
+            /** @description Base URL for proxied attachment and preview uploads */
+            upload_relay?: string;
             /** @description Base URL for static assets (avatars, emojis, etc.) */
             static_cdn: string;
             /** @description Base URL for the marketing website */
             marketing: string;
+            /** @description Base URL for the documentation website */
+            docs?: string;
             /** @description Base URL for the admin panel */
             admin: string;
             /** @description Base URL for invite links */
@@ -10765,10 +11780,35 @@ export interface components {
         /** @enum {string} */
         InstanceCaptchaProviderSchema: "altcha" | "none";
         /**
+         * @description How usernames are tagged
+         * @enum {string}
+         */
+        TagStyleSchema: "none" | "random";
+        /**
+         * @description How people identify themselves when they sign in
+         * @enum {string}
+         */
+        AccountIdentityModeSchema: "email" | "username";
+        /**
          * @description Registration mode
          * @enum {string}
          */
         InstanceRegistrationModeSchema: "open" | "approval" | "closed";
+        /** @enum {string} */
+        InstancePushDeliveryModeSchema: "direct" | "external_relay" | "hybrid";
+        /** @description Age policy for one region */
+        InstanceAgePolicyGeoSchema: {
+            /** @description ISO 3166-1 alpha-2 country code */
+            country_code: string;
+            /** @description ISO 3166-2 subdivision code, or null for the whole country */
+            region_code: string | null;
+            /** @description Whether the region restricts or blocks access */
+            action: components["schemas"]["InstanceAgePolicyActionSchema"];
+            /** @description Whether card age verification is available in the region */
+            card_verification_available: boolean;
+        };
+        /** @enum {string} */
+        InstanceAgePolicyActionSchema: "restrict" | "block";
         /**
          * Format: int32
          * @description The bot user flags
@@ -10796,11 +11836,13 @@ export interface components {
         RefreshedAttachmentUrl: {
             /** @description The requested URL, echoed back unchanged */
             original: string;
-            /** @description The same URL carrying a fresh signature, or the original when it is not an attachment URL of ours */
+            /** @description The same URL with a fresh signature, or the original when it is not an attachment URL of ours */
             refreshed: string;
         };
         PasswordType: string;
         EmailType: string;
+        /** @enum {string} */
+        DesktopHandoffReturnMethod: "deep_link" | "code";
         AuthSessionLocation: {
             /** @description The city name reported by the client */
             city?: string | null;
@@ -10898,6 +11940,167 @@ export interface components {
             /** @description Whether this is the current session making the request */
             current: boolean;
         };
+        ChannelUpdateMediaRequestBody: {
+            /** @description The guidelines of the channel (1-4096 characters) */
+            topic?: string | null;
+            /** @description External URL for link channels */
+            url?: string | null;
+            /** @description ID of the parent category for this channel */
+            parent_id?: components["schemas"]["SnowflakeType"] | null;
+            /** @description Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature */
+            bitrate?: number | null;
+            /** @description Maximum users allowed in voice channel (0-99, 0 means unlimited) */
+            user_limit?: number | null;
+            /** @description Maximum active voice connections allowed per user in a voice channel (1-100) */
+            voice_connection_limit?: number | null;
+            /** @description Permission overwrites for roles and members */
+            permission_overwrites?: {
+                /** @description The ID of the role or user to overwrite permissions for */
+                id: components["schemas"]["SnowflakeType"];
+                /**
+                 * @description The type of overwrite (0 = role, 1 = member)
+                 * @enum {integer}
+                 */
+                type: 0 | 1;
+                /** @description Bitwise value of allowed permissions */
+                allow?: components["schemas"]["UnsignedInt64Type"];
+                /** @description Bitwise value of denied permissions */
+                deny?: components["schemas"]["UnsignedInt64Type"];
+            }[];
+            /** @description Slowmode delay in seconds (0-21600) */
+            rate_limit_per_user?: number | null;
+            /** @description Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override. */
+            nsfw?: boolean | null;
+            /** @description Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present. */
+            nsfw_override?: boolean | null;
+            /** @description Channel-level content warning override (0=inherit, 1=force-warn) */
+            content_warning_level?: components["schemas"]["ContentWarningLevelInput"];
+            /** @description Custom channel content warning text (max 200 characters); null inherits from parent or guild */
+            content_warning_text?: string | null;
+            /** @description Base64-encoded icon image for group DM channels */
+            icon?: components["schemas"]["Base64ImageType"] | null;
+            /** @description ID of the new owner for group DM channels */
+            owner_id?: components["schemas"]["SnowflakeType"] | null;
+            /** @description Custom nicknames for users in this channel */
+            nicks?: components["schemas"]["ChannelNicknameOverrides"];
+            /** @description Voice region ID for the voice channel (1-64 characters) */
+            rtc_region?: string | null;
+            /** @description Whether calls in the voice channel connect participants directly instead of through a voice server */
+            rtc_p2p?: boolean;
+            /** @description The name of the channel */
+            name?: string | null;
+            /** @description Default auto archive duration in minutes for new threads */
+            default_auto_archive_duration?: components["schemas"]["ThreadAutoArchiveDurationSchema"] | null;
+            /** @description Slowmode in seconds copied onto new threads (0-21600) */
+            default_thread_rate_limit_per_user?: components["schemas"]["Int32Type"] | null;
+            /** @description Tags that can be applied to posts (max 20) */
+            available_tags?: components["schemas"]["ForumTagUpdateRequest"][];
+            /** @description Default reaction shown on posts */
+            default_reaction_emoji?: components["schemas"]["DefaultReactionEmojiRequest"] | null;
+            default_sort_order?: components["schemas"]["ForumSortOrderSchema"] | null;
+            default_tag_setting?: components["schemas"]["ForumTagSettingSchema"] | null;
+            /** @description Channel flags */
+            flags?: components["schemas"]["Int32Type"];
+        };
+        ChannelUpdateForumRequestBody: {
+            /** @description The guidelines of the channel (1-4096 characters) */
+            topic?: string | null;
+            /** @description External URL for link channels */
+            url?: string | null;
+            /** @description ID of the parent category for this channel */
+            parent_id?: components["schemas"]["SnowflakeType"] | null;
+            /** @description Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature */
+            bitrate?: number | null;
+            /** @description Maximum users allowed in voice channel (0-99, 0 means unlimited) */
+            user_limit?: number | null;
+            /** @description Maximum active voice connections allowed per user in a voice channel (1-100) */
+            voice_connection_limit?: number | null;
+            /** @description Permission overwrites for roles and members */
+            permission_overwrites?: {
+                /** @description The ID of the role or user to overwrite permissions for */
+                id: components["schemas"]["SnowflakeType"];
+                /**
+                 * @description The type of overwrite (0 = role, 1 = member)
+                 * @enum {integer}
+                 */
+                type: 0 | 1;
+                /** @description Bitwise value of allowed permissions */
+                allow?: components["schemas"]["UnsignedInt64Type"];
+                /** @description Bitwise value of denied permissions */
+                deny?: components["schemas"]["UnsignedInt64Type"];
+            }[];
+            /** @description Slowmode delay in seconds (0-21600) */
+            rate_limit_per_user?: number | null;
+            /** @description Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override. */
+            nsfw?: boolean | null;
+            /** @description Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present. */
+            nsfw_override?: boolean | null;
+            /** @description Channel-level content warning override (0=inherit, 1=force-warn) */
+            content_warning_level?: components["schemas"]["ContentWarningLevelInput"];
+            /** @description Custom channel content warning text (max 200 characters); null inherits from parent or guild */
+            content_warning_text?: string | null;
+            /** @description Base64-encoded icon image for group DM channels */
+            icon?: components["schemas"]["Base64ImageType"] | null;
+            /** @description ID of the new owner for group DM channels */
+            owner_id?: components["schemas"]["SnowflakeType"] | null;
+            /** @description Custom nicknames for users in this channel */
+            nicks?: components["schemas"]["ChannelNicknameOverrides"];
+            /** @description Voice region ID for the voice channel (1-64 characters) */
+            rtc_region?: string | null;
+            /** @description Whether calls in the voice channel connect participants directly instead of through a voice server */
+            rtc_p2p?: boolean;
+            /** @description The name of the channel */
+            name?: string | null;
+            /** @description Default auto archive duration in minutes for new threads */
+            default_auto_archive_duration?: components["schemas"]["ThreadAutoArchiveDurationSchema"] | null;
+            /** @description Slowmode in seconds copied onto new threads (0-21600) */
+            default_thread_rate_limit_per_user?: components["schemas"]["Int32Type"] | null;
+            /** @description Tags that can be applied to posts (max 20) */
+            available_tags?: components["schemas"]["ForumTagUpdateRequest"][];
+            /** @description Default reaction shown on posts */
+            default_reaction_emoji?: components["schemas"]["DefaultReactionEmojiRequest"] | null;
+            default_sort_order?: components["schemas"]["ForumSortOrderSchema"] | null;
+            default_tag_setting?: components["schemas"]["ForumTagSettingSchema"] | null;
+            /** @description Channel flags */
+            flags?: components["schemas"]["Int32Type"];
+            default_forum_layout?: components["schemas"]["ForumLayoutSchema"] | null;
+        };
+        ChannelUpdateThreadParentRequestBody: {
+            /** @description Default auto archive duration in minutes for new threads */
+            default_auto_archive_duration?: components["schemas"]["ThreadAutoArchiveDurationSchema"] | null;
+            /** @description Slowmode in seconds copied onto new threads (0-21600) */
+            default_thread_rate_limit_per_user?: components["schemas"]["Int32Type"] | null;
+        };
+        ChannelUpdatePrivateThreadRequestBody: {
+            /** @description The name of the thread (1-100 characters) */
+            name?: string;
+            /** @description Whether the thread is archived */
+            archived?: boolean | null;
+            auto_archive_duration?: components["schemas"]["ThreadAutoArchiveDurationSchema"];
+            /** @description Whether only moderators can unarchive the thread */
+            locked?: boolean | null;
+            /** @description Seconds a user has to wait before sending another message (0-21600) */
+            rate_limit_per_user?: components["schemas"]["Int32Type"] | null;
+            /** @description Channel flags */
+            flags?: components["schemas"]["Int32Type"];
+            /** @description Whether non-moderators can add other non-moderators */
+            invitable?: boolean | null;
+        };
+        ChannelUpdatePublicThreadRequestBody: {
+            /** @description The name of the thread (1-100 characters) */
+            name?: string;
+            /** @description Whether the thread is archived */
+            archived?: boolean | null;
+            auto_archive_duration?: components["schemas"]["ThreadAutoArchiveDurationSchema"];
+            /** @description Whether only moderators can unarchive the thread */
+            locked?: boolean | null;
+            /** @description Seconds a user has to wait before sending another message (0-21600) */
+            rate_limit_per_user?: components["schemas"]["Int32Type"] | null;
+            /** @description Channel flags */
+            flags?: components["schemas"]["Int32Type"];
+            /** @description IDs of the tags applied to the post (max 5) */
+            applied_tags?: components["schemas"]["SnowflakeType"][];
+        };
         /** @description User nickname overrides (user ID to nickname mapping) */
         ChannelNicknameOverrides: {
             [key: string]: string | null;
@@ -10911,6 +12114,42 @@ export interface components {
         ContentWarningLevelInput: 0 | 1;
         /** Format: int64 */
         UnsignedInt64Type: string | number;
+        /**
+         * Format: int32
+         * @description Minutes of inactivity before the thread stops showing in the channel list
+         * @enum {integer}
+         */
+        ThreadAutoArchiveDurationSchema: 60 | 1440 | 4320 | 10080;
+        /**
+         * Format: int32
+         * @description The default layout of a forum channel
+         * @enum {integer}
+         */
+        ForumLayoutSchema: 0 | 1 | 2;
+        /**
+         * Format: int32
+         * @description The default sort order of posts
+         * @enum {integer}
+         */
+        ForumSortOrderSchema: 0 | 1;
+        DefaultReactionEmojiRequest: {
+            /** @description The ID of a custom guild emoji */
+            emoji_id?: components["schemas"]["SnowflakeType"] | null;
+            /** @description The unicode character of the emoji */
+            emoji_name?: string | null;
+        };
+        ForumTagUpdateRequest: {
+            /** @description The name of the tag (1-50 characters) */
+            name: string;
+            /** @description Whether only moderators can add or remove this tag */
+            moderated?: boolean;
+            /** @description The ID of a custom guild emoji */
+            emoji_id?: components["schemas"]["SnowflakeType"] | null;
+            /** @description The unicode character of the emoji */
+            emoji_name?: string | null;
+            /** @description The ID of an existing tag to keep */
+            id?: components["schemas"]["SnowflakeType"];
+        };
         PresignedAttachmentUploadResponseItem: components["schemas"]["SinglepartPresignedAttachmentUploadResponseItem"] | components["schemas"]["MultipartPresignedAttachmentUploadResponseItem"];
         MultipartPresignedAttachmentUploadResponseItem: {
             /** @description The client-side identifier for this attachment */
@@ -11088,7 +12327,7 @@ export interface components {
          * @description The type of the channel
          * @enum {integer}
          */
-        ChannelType: 0 | 1 | 2 | 3 | 4 | 5 | 998 | 999;
+        ChannelType: 0 | 1 | 2 | 3 | 4 | 5 | 10 | 11 | 12 | 15 | 16 | 998 | 999;
         /** @description Client-generated identifier for the message */
         MessageNonceRequest: string | number;
         /**
@@ -11273,7 +12512,7 @@ export interface components {
                 message_reference?: {
                     /** @description The ID of the channel containing the referenced message */
                     channel_id: components["schemas"]["SnowflakeStringType"];
-                    /** @description The ID of the referenced message, absent on a channel follow system message */
+                    /** @description The ID of the referenced message, absent on a channel follow system message and on thread created messages that reference only a thread */
                     message_id?: components["schemas"]["SnowflakeStringType"] | null;
                     /** @description The ID of the guild containing the referenced message */
                     guild_id?: components["schemas"]["SnowflakeStringType"] | null;
@@ -11290,6 +12529,8 @@ export interface components {
                     /** @description The ISO 8601 timestamp of when the call ended */
                     ended_timestamp?: string | null;
                 } | null;
+                /** @description The thread started from this message, when the viewer can see threads */
+                thread?: components["schemas"]["ThreadChannelResponse"];
             };
             /**
              * Format: date-time
@@ -11397,7 +12638,7 @@ export interface components {
             /** @description The fields of the embed */
             fields?: components["schemas"]["EmbedFieldResponse"][] | null;
             /** @description The provider of the embed (e.g., YouTube, Twitter) */
-            provider?: components["schemas"]["EmbedAuthorResponse"] | null;
+            provider?: components["schemas"]["EmbedProviderResponse"] | null;
             /** @description The video of the embed */
             video?: components["schemas"]["EmbedMediaResponse"] | null;
             /** @description The audio of the embed */
@@ -11426,7 +12667,7 @@ export interface components {
          * @description The type of message
          * @enum {integer}
          */
-        MessageType: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 12 | 19;
+        MessageType: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 12 | 18 | 19 | 21;
         MessageEmbedChildResponse: {
             /** @description The type of embed (e.g., rich, image, video, gifv, article, link) */
             type: string;
@@ -11451,7 +12692,7 @@ export interface components {
             /** @description The fields of the embed */
             fields?: components["schemas"]["EmbedFieldResponse"][] | null;
             /** @description The provider of the embed (e.g., YouTube, Twitter) */
-            provider?: components["schemas"]["EmbedAuthorResponse"] | null;
+            provider?: components["schemas"]["EmbedProviderResponse"] | null;
             /** @description The video of the embed */
             video?: components["schemas"]["EmbedMediaResponse"] | null;
             /** @description The audio of the embed */
@@ -11486,15 +12727,11 @@ export interface components {
             duration?: components["schemas"]["Int32Type"] | null;
             flags: components["schemas"]["EmbedMediaFlags"];
         };
-        EmbedAuthorResponse: {
-            /** @description The name of the author */
+        EmbedProviderResponse: {
+            /** @description The name of the provider */
             name: string;
-            /** @description The URL of the author */
+            /** @description The URL of the provider */
             url?: string | null;
-            /** @description The URL of the author icon */
-            icon_url?: string | null;
-            /** @description The proxied URL of the author icon */
-            proxy_icon_url?: string | null;
         };
         EmbedFieldResponse: {
             /** @description The name of the field */
@@ -11510,6 +12747,16 @@ export interface components {
             /** @description The URL of the footer icon */
             icon_url?: string | null;
             /** @description The proxied URL of the footer icon */
+            proxy_icon_url?: string | null;
+        };
+        EmbedAuthorResponse: {
+            /** @description The name of the author */
+            name: string;
+            /** @description The URL of the author */
+            url?: string | null;
+            /** @description The URL of the author icon */
+            icon_url?: string | null;
+            /** @description The proxied URL of the author icon */
             proxy_icon_url?: string | null;
         };
         /**
@@ -11553,11 +12800,75 @@ export interface components {
             /** @description Whether the source community can be joined through discovery */
             discoverable: boolean;
         };
+        DefaultReactionEmojiResponse: {
+            /** @description The ID of a custom guild emoji */
+            emoji_id: components["schemas"]["SnowflakeStringType"] | null;
+            /** @description The unicode character of the emoji */
+            emoji_name: string | null;
+        };
+        ForumTagResponse: {
+            /** @description The ID of the tag */
+            id: components["schemas"]["SnowflakeStringType"];
+            /** @description The name of the tag */
+            name: string;
+            /** @description Whether only moderators can add or remove this tag */
+            moderated: boolean;
+            /** @description The ID of a custom guild emoji */
+            emoji_id: components["schemas"]["SnowflakeStringType"] | null;
+            /** @description The unicode character of the emoji */
+            emoji_name: string | null;
+        };
+        ThreadMetadataResponse: {
+            /** @description Whether the thread is archived */
+            archived: boolean;
+            /** @description Minutes of inactivity before the thread stops showing in the channel list */
+            auto_archive_duration: components["schemas"]["Int32Type"];
+            /**
+             * Format: date-time
+             * @description When the archive status of the thread last changed
+             */
+            archive_timestamp: string;
+            /** @description Whether only moderators can interact with the thread */
+            locked: boolean;
+            /** @description Whether non-moderators can add other non-moderators (private threads) */
+            invitable?: boolean;
+            /**
+             * Format: date-time
+             * @description When the thread was created
+             */
+            create_timestamp: string;
+        };
+        /**
+         * Format: int32
+         * @description The content warning level for a guild, category, or channel
+         * @enum {integer}
+         */
+        ContentWarningLevel: 0 | 1;
+        ChannelOverwriteResponse: {
+            /** @description The unique identifier for the role or user this overwrite applies to */
+            id: components["schemas"]["SnowflakeStringType"];
+            type: components["schemas"]["ChannelOverwriteType"];
+            /** @description The bitwise value of allowed permissions */
+            allow: components["schemas"]["Permissions"];
+            /** @description The bitwise value of denied permissions */
+            deny: components["schemas"]["Permissions"];
+        };
+        /**
+         * Format: int64
+         * @description Permission bitfield as string
+         */
+        Permissions: string;
         /**
          * @description The type of entity the overwrite applies to
          * @enum {integer}
          */
         ChannelOverwriteType: 0 | 1;
+        ThreadPostDataEntryResponse: {
+            /** @description The guild member who created the post */
+            owner: components["schemas"]["GuildMemberResponse"] | null;
+            /** @description The first message of the post */
+            first_message: components["schemas"]["MessageResponseSchema"] | null;
+        };
         RtcRegionResponse: {
             /** @description The unique identifier for this RTC region */
             id: string;
@@ -11565,6 +12876,63 @@ export interface components {
             name: string;
             /** @description The emoji associated with this RTC region */
             emoji: string;
+        };
+        StartForumThreadRequest: {
+            /** @description The name of the post (1-100 characters) */
+            name: string;
+            /** @description The type of thread, which is always a public thread in a forum */
+            type?: components["schemas"]["Int32Type"];
+            auto_archive_duration?: components["schemas"]["ThreadAutoArchiveDurationSchema"];
+            /** @description Seconds a user has to wait before sending another message (0-21600) */
+            rate_limit_per_user?: components["schemas"]["Int32Type"];
+            /** @description IDs of the tags applied to the post (max 5) */
+            applied_tags?: components["schemas"]["SnowflakeType"][];
+            /** @description The first message of the post */
+            message: components["schemas"]["ForumThreadMessageRequest"];
+        };
+        StartThreadRequest: {
+            /** @description The name of the thread (1-100 characters) */
+            name: string;
+            type: components["schemas"]["ThreadChannelType"];
+            auto_archive_duration?: components["schemas"]["ThreadAutoArchiveDurationSchema"];
+            /** @description Seconds a user has to wait before sending another message (0-21600) */
+            rate_limit_per_user?: components["schemas"]["Int32Type"];
+            /** @description Whether non-moderators can add other non-moderators (private threads) */
+            invitable?: boolean;
+        };
+        /**
+         * Format: int32
+         * @description The type of thread to create
+         * @enum {integer}
+         */
+        ThreadChannelType: 10 | 11 | 12;
+        ForumThreadMessageRequest: {
+            content?: components["schemas"]["MessageContentRequest"] | null;
+            /** @description Array of embed objects to include in the message */
+            embeds?: components["schemas"]["RichEmbedRequest"][];
+            /** @description Array of attachment objects */
+            attachments?: (components["schemas"]["ClientUploadedAttachmentRequest"] | components["schemas"]["ClientAttachmentRequest"])[];
+            /** @description Controls which mentions trigger notifications */
+            allowed_mentions?: components["schemas"]["AllowedMentionsRequest"] | null;
+            /**
+             * @description Message flags bitfield
+             * @default 0
+             */
+            flags?: components["schemas"]["MessageFlags"];
+            /** @description Array of sticker IDs to include (max 3) */
+            sticker_ids?: components["schemas"]["SnowflakeType"][] | null;
+        };
+        ThreadSearchResponse: {
+            /** @description The threads that match the search */
+            threads: components["schemas"]["ThreadChannelResponse"][];
+            /** @description A thread member object for each returned thread the user joined */
+            members: components["schemas"]["ThreadMemberResponse"][];
+            /** @description Whether more threads could be returned by a later request */
+            has_more: boolean;
+            /** @description The total number of threads that match the search */
+            total_results: components["schemas"]["Int32Type"];
+            /** @description The first message of each returned post, in forum and media channels only */
+            first_messages?: components["schemas"]["MessageResponseSchema"][];
         };
         /**
          * Format: int32
@@ -11580,8 +12948,17 @@ export interface components {
         };
         /** @enum {string} */
         DonationCurrency: "usd" | "eur" | "brl" | "inr" | "pln" | "try" | "sek" | "dkk" | "nok";
+        VoiceP2pAssignmentResponse: {
+            enabled: boolean;
+            max_participants: number;
+        };
         PlutoniumPageAssignmentResponse: {
             enabled: boolean;
+        };
+        ChannelThreadsAssignmentResponse: {
+            /** @constant */
+            active: true;
+            config_version: number;
         };
         DomainMigrationAssignmentResponse: {
             enabled: boolean;
@@ -11616,14 +12993,14 @@ export interface components {
         TemplateChannel: {
             /** @description The template-local channel ID */
             id: number | string;
-            /** @description The channel type (0 = text, 2 = voice, 4 = category) */
+            /** @description The channel type (0 = text, 2 = voice, 4 = category, 5 = announcement, 13 = stage, 15 = forum, 16 = media) */
             type: number;
             /** @description The name of the channel */
             name?: string | null;
-            /** @description The channel topic */
+            /** @description The channel topic or forum guidelines, shortened to the limit for the channel type */
             topic?: string | null;
             /** @description The position of the channel */
-            position: number;
+            position: components["schemas"]["Int32Type"];
             /** @description The template-local ID of the parent category */
             parent_id?: (number | string) | null;
             /** @description The bitrate for voice channels */
@@ -11633,9 +13010,9 @@ export interface components {
             /** @description The per-user voice connection limit for voice channels */
             voice_connection_limit?: number | null;
             /** @description Whether the channel is NSFW */
-            nsfw?: boolean;
+            nsfw?: boolean | null;
             /** @description Slowmode rate limit in seconds */
-            rate_limit_per_user?: number;
+            rate_limit_per_user?: number | null;
             /** @description Permission overwrites for this channel */
             permission_overwrites?: {
                 /** @description The ID of the role or user for this overwrite */
@@ -11646,7 +13023,37 @@ export interface components {
                 allow: string | number;
                 /** @description The denied permissions bitfield as a string */
                 deny: string | number;
-            }[];
+            }[] | null;
+            /** @description Tags for forum and media channels */
+            available_tags?: {
+                /** @description The name of the tag */
+                name: string;
+                /** @description Whether only moderators can apply the tag */
+                moderated?: boolean | null;
+                /** @description A custom emoji reference, ignored on import */
+                emoji_id?: (string | number) | null;
+                /** @description The unicode emoji of the tag */
+                emoji_name?: string | null;
+            }[] | null;
+            /** @description Default reaction for forum and media posts */
+            default_reaction_emoji?: {
+                /** @description A custom emoji reference, ignored on import */
+                emoji_id?: (string | number) | null;
+                /** @description The unicode emoji */
+                emoji_name?: string | null;
+            } | null;
+            /** @description Default post sort order for forum and media channels */
+            default_sort_order?: number | null;
+            /** @description Default layout for forum channels */
+            default_forum_layout?: number | null;
+            /** @description How posts are filtered by several tags */
+            default_tag_setting?: string | null;
+            /** @description Slowmode in seconds copied onto new threads */
+            default_thread_rate_limit_per_user?: number | null;
+            /** @description Default auto archive duration in minutes for new threads */
+            default_auto_archive_duration?: number | null;
+            /** @description Channel flags */
+            flags?: number | null;
         };
         TemplateRole: {
             /** @description The template-local role ID */
@@ -11658,7 +13065,7 @@ export interface components {
             /** @description The permissions bitfield as a string (preferred) */
             permissions_new?: string | number;
             /** @description The colour of the role as an integer */
-            color?: number;
+            color?: components["schemas"]["ColorType"];
             /** @description Whether the role is hoisted */
             hoist?: boolean;
             /** @description Whether the role is mentionable */
@@ -11689,7 +13096,7 @@ export interface components {
          * @description Required verification level for members
          * @enum {integer}
          */
-        GuildVerificationLevelInput: 0 | 1 | 2 | 3 | 4;
+        GuildVerificationLevelInput: 0 | 1 | 2 | 3;
         /**
          * Format: int32
          * @description Default notification level for new members
@@ -11779,7 +13186,7 @@ export interface components {
          * @description The type of action that occurred
          * @enum {integer}
          */
-        AuditLogActionType: 1 | 10 | 11 | 12 | 13 | 14 | 15 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 30 | 31 | 32 | 40 | 41 | 42 | 50 | 51 | 52 | 60 | 61 | 62 | 90 | 91 | 92 | 72 | 73 | 74 | 75;
+        AuditLogActionType: 1 | 10 | 11 | 12 | 13 | 14 | 15 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 30 | 31 | 32 | 40 | 41 | 42 | 50 | 51 | 52 | 60 | 61 | 62 | 90 | 91 | 92 | 72 | 73 | 74 | 75 | 110 | 111 | 112;
         GuildBanResponse: {
             /** @description The banned user */
             user: components["schemas"]["UserPartialResponse"];
@@ -11794,6 +13201,121 @@ export interface components {
             banned_at: string;
             /** @description ISO8601 timestamp of when the ban expires (null if permanent) */
             expires_at?: string | null;
+        };
+        GuildMediaChannelCreateRequest: {
+            /** @description The guidelines of the channel (1-4096 characters) */
+            topic?: string | null;
+            /** @description External URL for link channels */
+            url?: string | null;
+            /** @description ID of the parent category for this channel */
+            parent_id?: components["schemas"]["SnowflakeType"] | null;
+            /** @description Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature */
+            bitrate?: number | null;
+            /** @description Maximum users allowed in voice channel (0-99, 0 means unlimited) */
+            user_limit?: number | null;
+            /** @description Maximum active voice connections allowed per user in a voice channel (1-100) */
+            voice_connection_limit?: number | null;
+            /** @description Permission overwrites for roles and members */
+            permission_overwrites?: {
+                /** @description The ID of the role or user to overwrite permissions for */
+                id: components["schemas"]["SnowflakeType"];
+                /**
+                 * @description The type of overwrite (0 = role, 1 = member)
+                 * @enum {integer}
+                 */
+                type: 0 | 1;
+                /** @description Bitwise value of allowed permissions */
+                allow?: components["schemas"]["UnsignedInt64Type"];
+                /** @description Bitwise value of denied permissions */
+                deny?: components["schemas"]["UnsignedInt64Type"];
+            }[];
+            /** @description Slowmode delay in seconds (0-21600) */
+            rate_limit_per_user?: number | null;
+            /**
+             * @description Whether the channel is marked as NSFW
+             * @default false
+             */
+            nsfw?: boolean;
+            /** @description Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present. */
+            nsfw_override?: boolean | null;
+            /** @description Channel-level content warning override (0=inherit, 1=force-warn) */
+            content_warning_level?: components["schemas"]["ContentWarningLevelInput"];
+            /** @description Custom channel content warning text (max 200 characters); null inherits from parent or guild */
+            content_warning_text?: string | null;
+            /** @enum {integer} */
+            type: 16;
+            /** @description The name of the channel */
+            name: string;
+            /** @description Default auto archive duration in minutes for new threads */
+            default_auto_archive_duration?: components["schemas"]["ThreadAutoArchiveDurationSchema"] | null;
+            /** @description Slowmode in seconds copied onto new threads (0-21600) */
+            default_thread_rate_limit_per_user?: components["schemas"]["Int32Type"] | null;
+            /** @description Tags that can be applied to posts (max 20) */
+            available_tags?: components["schemas"]["ForumTagUpdateRequest"][];
+            /** @description Default reaction shown on posts */
+            default_reaction_emoji?: components["schemas"]["DefaultReactionEmojiRequest"] | null;
+            default_sort_order?: components["schemas"]["ForumSortOrderSchema"] | null;
+            default_tag_setting?: components["schemas"]["ForumTagSettingSchema"] | null;
+            /** @description Channel flags */
+            flags?: components["schemas"]["Int32Type"];
+        };
+        GuildForumChannelCreateRequest: {
+            /** @description The guidelines of the channel (1-4096 characters) */
+            topic?: string | null;
+            /** @description External URL for link channels */
+            url?: string | null;
+            /** @description ID of the parent category for this channel */
+            parent_id?: components["schemas"]["SnowflakeType"] | null;
+            /** @description Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature */
+            bitrate?: number | null;
+            /** @description Maximum users allowed in voice channel (0-99, 0 means unlimited) */
+            user_limit?: number | null;
+            /** @description Maximum active voice connections allowed per user in a voice channel (1-100) */
+            voice_connection_limit?: number | null;
+            /** @description Permission overwrites for roles and members */
+            permission_overwrites?: {
+                /** @description The ID of the role or user to overwrite permissions for */
+                id: components["schemas"]["SnowflakeType"];
+                /**
+                 * @description The type of overwrite (0 = role, 1 = member)
+                 * @enum {integer}
+                 */
+                type: 0 | 1;
+                /** @description Bitwise value of allowed permissions */
+                allow?: components["schemas"]["UnsignedInt64Type"];
+                /** @description Bitwise value of denied permissions */
+                deny?: components["schemas"]["UnsignedInt64Type"];
+            }[];
+            /** @description Slowmode delay in seconds (0-21600) */
+            rate_limit_per_user?: number | null;
+            /**
+             * @description Whether the channel is marked as NSFW
+             * @default false
+             */
+            nsfw?: boolean;
+            /** @description Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present. */
+            nsfw_override?: boolean | null;
+            /** @description Channel-level content warning override (0=inherit, 1=force-warn) */
+            content_warning_level?: components["schemas"]["ContentWarningLevelInput"];
+            /** @description Custom channel content warning text (max 200 characters); null inherits from parent or guild */
+            content_warning_text?: string | null;
+            /** @enum {integer} */
+            type: 15;
+            /** @description The name of the channel */
+            name: string;
+            /** @description Default auto archive duration in minutes for new threads */
+            default_auto_archive_duration?: components["schemas"]["ThreadAutoArchiveDurationSchema"] | null;
+            /** @description Slowmode in seconds copied onto new threads (0-21600) */
+            default_thread_rate_limit_per_user?: components["schemas"]["Int32Type"] | null;
+            /** @description Tags that can be applied to posts (max 20) */
+            available_tags?: components["schemas"]["ForumTagUpdateRequest"][];
+            /** @description Default reaction shown on posts */
+            default_reaction_emoji?: components["schemas"]["DefaultReactionEmojiRequest"] | null;
+            default_sort_order?: components["schemas"]["ForumSortOrderSchema"] | null;
+            default_tag_setting?: components["schemas"]["ForumTagSettingSchema"] | null;
+            /** @description Channel flags */
+            flags?: components["schemas"]["Int32Type"];
+            default_forum_layout?: components["schemas"]["ForumLayoutSchema"] | null;
         };
         GuildLinkChannelCreateRequest: {
             /** @description The channel topic (1-1024 characters) */
@@ -11974,6 +13496,10 @@ export interface components {
             type: 5;
             /** @description The name of the channel */
             name: string;
+            /** @description Default auto archive duration in minutes for new threads */
+            default_auto_archive_duration?: components["schemas"]["ThreadAutoArchiveDurationSchema"] | null;
+            /** @description Slowmode in seconds copied onto new threads (0-21600) */
+            default_thread_rate_limit_per_user?: components["schemas"]["Int32Type"] | null;
         };
         GuildTextChannelCreateRequest: {
             /** @description The channel topic (1-1024 characters) */
@@ -12019,6 +13545,10 @@ export interface components {
             type: 0;
             /** @description The name of the channel */
             name: string;
+            /** @description Default auto archive duration in minutes for new threads */
+            default_auto_archive_duration?: components["schemas"]["ThreadAutoArchiveDurationSchema"] | null;
+            /** @description Slowmode in seconds copied onto new threads (0-21600) */
+            default_thread_rate_limit_per_user?: components["schemas"]["Int32Type"] | null;
         };
         /**
          * Format: int32
@@ -12092,11 +13622,6 @@ export interface components {
          * @description Member profile flags
          */
         GuildMemberProfileFlags: number;
-        /**
-         * Format: int64
-         * @description Permission bitfield as string
-         */
-        Permissions: string;
         GuildStickerWithUserResponse: {
             /** @description The unique identifier for this sticker */
             id: components["schemas"]["SnowflakeStringType"];
@@ -12132,12 +13657,6 @@ export interface components {
         GuildExplicitContentFilter: 0 | 1 | 2;
         /**
          * Format: int32
-         * @description The content warning level for a guild, category, or channel
-         * @enum {integer}
-         */
-        ContentWarningLevel: 0 | 1;
-        /**
-         * Format: int32
          * @description Required MFA level for moderation actions
          * @enum {integer}
          */
@@ -12147,7 +13666,7 @@ export interface components {
          * @description Required verification level for members
          * @enum {integer}
          */
-        GuildVerificationLevel: 0 | 1 | 2 | 3 | 4;
+        GuildVerificationLevel: 0 | 1 | 2 | 3;
         GroupDmInviteResponse: {
             /** @description The unique invite code */
             code: string;
@@ -12505,99 +14024,158 @@ export interface components {
             last_pin_timestamp: string | null;
             /** @description Read-state version for ordering updates as a decimal uint64 */
             version?: components["schemas"]["UnsignedInt64StringType"];
+            /** @description Server-stamped read state flags, present only on thread and forum read states */
+            flags?: components["schemas"]["Int32Type"];
         };
         /** Format: int64 */
         UnsignedInt64StringType: string;
-        GuildDsaReportRequest: {
+        GuildDsaReportFlowRequest: {
             /** @description Verification ticket obtained from email verification */
             ticket: string;
-            /** @description Additional context or details about the report */
-            additional_info?: string;
-            /** @description Full legal name of the person filing the report */
-            reporter_full_legal_name: string;
+            /** @description EU country code of the reporter residence */
+            reporter_country_of_residence: components["schemas"]["EuCountryCode"];
+            /** @description revision_hash of the DSA report flow the reporter answered */
+            revision_hash: string;
+            /** @description Screens of the DSA report flow and the answers chosen on each, in order */
+            steps: components["schemas"]["ReportFlowStep"][];
             /**
-             * @description EU country code of the reporter residence
-             * @enum {string}
+             * @description Confirms in good faith that the information and allegations in the notice are accurate and complete
+             * @constant
              */
-            reporter_country_of_residence: "AT" | "BE" | "BG" | "HR" | "CY" | "CZ" | "DK" | "EE" | "FI" | "FR" | "DE" | "GR" | "HU" | "IE" | "IT" | "LV" | "LT" | "LU" | "MT" | "NL" | "PL" | "PT" | "RO" | "SK" | "SI" | "ES" | "SE";
-            /** @description Fluxer tag of the reporter if they have an account */
-            reporter_fluxer_tag?: string;
+            good_faith_confirmed: true;
+            /** @description Language tag the reporter saw the flow in */
+            locale?: string;
+            /** @description Explanation of the problem. If the reporter believes the content is illegal, which law it breaks and why */
+            additional_info: string;
+            /** @description Full legal name of the person filing the report, required unless the report is about child sexual abuse */
+            reporter_full_legal_name?: string;
             /**
              * @description Type of report
              * @constant
              */
             report_type: "guild";
-            category: components["schemas"]["GuildReportCategory"];
             /** @description ID of the guild being reported */
             guild_id: components["schemas"]["SnowflakeType"];
             /** @description Invite code used to access the guild */
             invite_code?: string;
         };
-        UserDsaReportRequest: {
+        UserDsaReportFlowRequest: {
             /** @description Verification ticket obtained from email verification */
             ticket: string;
-            /** @description Additional context or details about the report */
-            additional_info?: string;
-            /** @description Full legal name of the person filing the report */
-            reporter_full_legal_name: string;
+            /** @description EU country code of the reporter residence */
+            reporter_country_of_residence: components["schemas"]["EuCountryCode"];
+            /** @description revision_hash of the DSA report flow the reporter answered */
+            revision_hash: string;
+            /** @description Screens of the DSA report flow and the answers chosen on each, in order */
+            steps: components["schemas"]["ReportFlowStep"][];
             /**
-             * @description EU country code of the reporter residence
-             * @enum {string}
+             * @description Confirms in good faith that the information and allegations in the notice are accurate and complete
+             * @constant
              */
-            reporter_country_of_residence: "AT" | "BE" | "BG" | "HR" | "CY" | "CZ" | "DK" | "EE" | "FI" | "FR" | "DE" | "GR" | "HU" | "IE" | "IT" | "LV" | "LT" | "LU" | "MT" | "NL" | "PL" | "PT" | "RO" | "SK" | "SI" | "ES" | "SE";
-            /** @description Fluxer tag of the reporter if they have an account */
-            reporter_fluxer_tag?: string;
+            good_faith_confirmed: true;
+            /** @description Language tag the reporter saw the flow in */
+            locale?: string;
+            /** @description Explanation of the problem. If the reporter believes the content is illegal, which law it breaks and why */
+            additional_info: string;
+            /** @description Full legal name of the person filing the report, required unless the report is about child sexual abuse */
+            reporter_full_legal_name?: string;
             /**
              * @description Type of report
              * @constant
              */
             report_type: "user";
-            category: components["schemas"]["UserReportCategory"];
             /** @description ID of the user being reported */
             user_id?: components["schemas"]["SnowflakeType"];
             /** @description Fluxer tag of the user being reported */
             user_tag?: string;
         };
-        MessageDsaReportRequest: {
+        MessageDsaReportFlowRequest: {
             /** @description Verification ticket obtained from email verification */
             ticket: string;
-            /** @description Additional context or details about the report */
-            additional_info?: string;
-            /** @description Full legal name of the person filing the report */
-            reporter_full_legal_name: string;
+            /** @description EU country code of the reporter residence */
+            reporter_country_of_residence: components["schemas"]["EuCountryCode"];
+            /** @description revision_hash of the DSA report flow the reporter answered */
+            revision_hash: string;
+            /** @description Screens of the DSA report flow and the answers chosen on each, in order */
+            steps: components["schemas"]["ReportFlowStep"][];
             /**
-             * @description EU country code of the reporter residence
-             * @enum {string}
+             * @description Confirms in good faith that the information and allegations in the notice are accurate and complete
+             * @constant
              */
-            reporter_country_of_residence: "AT" | "BE" | "BG" | "HR" | "CY" | "CZ" | "DK" | "EE" | "FI" | "FR" | "DE" | "GR" | "HU" | "IE" | "IT" | "LV" | "LT" | "LU" | "MT" | "NL" | "PL" | "PT" | "RO" | "SK" | "SI" | "ES" | "SE";
-            /** @description Fluxer tag of the reporter if they have an account */
-            reporter_fluxer_tag?: string;
+            good_faith_confirmed: true;
+            /** @description Language tag the reporter saw the flow in */
+            locale?: string;
+            /** @description Explanation of the problem. If the reporter believes the content is illegal, which law it breaks and why */
+            additional_info: string;
+            /** @description Full legal name of the person filing the report, required unless the report is about child sexual abuse */
+            reporter_full_legal_name?: string;
             /**
              * @description Type of report
              * @constant
              */
             report_type: "message";
-            category: components["schemas"]["MessageReportCategory"];
             /** @description Link to the message being reported */
             message_link: string;
             /** @description Fluxer tag of the user who sent the message */
             reported_user_tag?: string;
         };
+        ReportFlowStep: {
+            screen_id: string;
+            option_id?: string;
+            item_ids?: string[];
+        };
         /**
-         * @description Category of the message report
+         * @description EU country code of residence
          * @enum {string}
          */
-        MessageReportCategory: "harassment" | "hate_speech" | "violent_content" | "spam" | "nsfw_violation" | "illegal_activity" | "doxxing" | "self_harm" | "child_safety" | "malicious_links" | "impersonation" | "other";
+        EuCountryCode: "AT" | "BE" | "BG" | "HR" | "CY" | "CZ" | "DK" | "EE" | "FI" | "FR" | "DE" | "GR" | "HU" | "IE" | "IT" | "LV" | "LT" | "LU" | "MT" | "NL" | "PL" | "PT" | "RO" | "SK" | "SI" | "ES" | "SE";
+        ReportFlowNotice: {
+            id: string;
+            title: string;
+            body: string;
+        };
+        ReportFlowScreen: {
+            id: string;
+            title: string;
+            subtitle: string | null;
+            urgent: boolean;
+            options: components["schemas"]["ReportFlowOption"][];
+            options_heading: string | null;
+            checklist: components["schemas"]["ReportFlowChecklist"] | null;
+            /** @description Set on an info screen, which has a Next button instead of choices */
+            next_screen_id: string | null;
+        };
+        ReportFlowChecklist: {
+            items: components["schemas"]["ReportFlowChecklistItem"][];
+            min_checked: number;
+            outcome: components["schemas"]["ReportFlowOutcome"];
+        };
+        ReportFlowOption: {
+            id: string;
+            label: string;
+            outcome: components["schemas"]["ReportFlowOutcome"];
+        };
+        ReportFlowOutcome: {
+            type: components["schemas"]["ReportFlowOutcomeType"];
+            /** @description Next screen when type is screen */
+            screen_id: string | null;
+            /** @description Report reason when type is submit */
+            reason: string | null;
+            /** @description Notice to show when type is end, null for the thank-you screen */
+            notice_id: string | null;
+            /** @description Page to open when type is link */
+            url: string | null;
+        };
         /**
-         * @description Category of the user report
+         * @description What choosing an option does
          * @enum {string}
          */
-        UserReportCategory: "harassment" | "hate_speech" | "spam_account" | "impersonation" | "underage_user" | "inappropriate_profile" | "other";
-        /**
-         * @description Category of the guild report
-         * @enum {string}
-         */
-        GuildReportCategory: "harassment" | "hate_speech" | "extremist_community" | "illegal_activity" | "child_safety" | "raid_coordination" | "spam" | "malware_distribution" | "other";
+        ReportFlowOutcomeType: "screen" | "submit" | "end" | "link";
+        ReportFlowChecklistItem: {
+            id: string;
+            label: string;
+            description: string | null;
+        };
         MessageSearchResultsResponse: {
             /** @description The messages matching the search query */
             messages: {
@@ -12647,7 +14225,7 @@ export interface components {
                 message_reference?: {
                     /** @description The ID of the channel containing the referenced message */
                     channel_id: components["schemas"]["SnowflakeStringType"];
-                    /** @description The ID of the referenced message, absent on a channel follow system message */
+                    /** @description The ID of the referenced message, absent on a channel follow system message and on thread created messages that reference only a thread */
                     message_id?: components["schemas"]["SnowflakeStringType"] | null;
                     /** @description The ID of the guild containing the referenced message */
                     guild_id?: components["schemas"]["SnowflakeStringType"] | null;
@@ -12664,6 +14242,8 @@ export interface components {
                     /** @description The ISO 8601 timestamp of when the call ended */
                     ended_timestamp?: string | null;
                 } | null;
+                /** @description The thread started from this message, when the viewer can see threads */
+                thread?: components["schemas"]["ThreadChannelResponse"];
             }[];
             /** @description Serialized channels referenced by the returned messages */
             channels: components["schemas"]["ChannelResponse"][];
@@ -12675,6 +14255,10 @@ export interface components {
             page: components["schemas"]["Int32Type"];
             /** @description Opaque cursor for fetching the next page of results */
             cursor?: string[];
+            /** @description The threads that contain the returned messages, when the viewer can see threads */
+            threads?: components["schemas"]["ThreadChannelResponse"][];
+            /** @description A thread member object for each returned thread the current user has joined */
+            members?: components["schemas"]["ThreadMemberResponse"][];
         };
         MessageReactionResponse: {
             /** @description The emoji used for the reaction */
@@ -12723,43 +14307,6 @@ export interface components {
         MessageAuthorType: "user" | "bot" | "webhook";
         /** @enum {string} */
         CheckoutPaymentMethodEnum: "card" | "pix" | "upi";
-        ExpiredLocalizedCardPreapprovalContinueResponse: {
-            /**
-             * @description The preapproval token has expired or is unknown
-             * @constant
-             */
-            status: "expired";
-        };
-        RejectedLocalizedCardPreapprovalContinueResponse: {
-            /**
-             * @description The preapproval failed and the paid checkout should not continue
-             * @constant
-             */
-            status: "rejected";
-            /**
-             * @description The reason the preapproval was rejected
-             * @enum {string}
-             */
-            reason: "country_mismatch" | "missing_customer" | "missing_payment_method" | "missing_setup_intent" | "payment_method_not_card" | "unknown";
-            /** @description The detected card issuing country when available */
-            actual_country?: string | null;
-        };
-        ReadyLocalizedCardPreapprovalContinueResponse: {
-            /**
-             * @description The preapproval succeeded and the paid checkout URL is ready
-             * @constant
-             */
-            status: "ready";
-            /** @description The URL to redirect to */
-            url: string;
-        };
-        PendingLocalizedCardPreapprovalContinueResponse: {
-            /**
-             * @description The preapproval result is still being processed
-             * @constant
-             */
-            status: "pending";
-        };
         GifCategoryTagResponse: {
             /** @description Category search term (locale-translated label suitable for display). */
             name: string;
@@ -12808,18 +14355,15 @@ export interface components {
         };
         /**
          * Format: int32
+         * @description Authenticator type
+         * @enum {integer}
+         */
+        UserAuthenticatorTypes: 0 | 2;
+        /**
+         * Format: int32
          * @description Bitfield controlling who can see the profile timezone
          */
         ProfileFieldPrivacyFlags: number;
-        ChannelOverwriteResponse: {
-            /** @description The unique identifier for the role or user this overwrite applies to */
-            id: components["schemas"]["SnowflakeStringType"];
-            type: components["schemas"]["ChannelOverwriteType"];
-            /** @description The bitwise value of allowed permissions */
-            allow: components["schemas"]["Permissions"];
-            /** @description The bitwise value of denied permissions */
-            deny: components["schemas"]["Permissions"];
-        };
         /**
          * Format: int32
          * @description Bitfield for connection visibility settings
@@ -12948,12 +14492,6 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        /**
-         * Format: int32
-         * @description Authenticator type
-         * @enum {integer}
-         */
-        UserAuthenticatorTypes: 0 | 2;
         HexString32Type: string;
         CompletedPasskeyBridgeSudoRedeemResponse: {
             /**
@@ -12971,7 +14509,6 @@ export interface components {
              */
             status: "cancelled";
         };
-        PhoneNumberType: string;
         /**
          * Format: int32
          * @description Relationship type
@@ -13135,6 +14672,11 @@ export interface components {
         HexString16Type: string;
         /** Format: int64 */
         Int64Type: string | number;
+        /**
+         * @description Known error codes returned by API operations
+         * @enum {string}
+         */
+        APIErrorCode: "ACCESS_DENIED" | "ANNOUNCEMENT_CHANNEL_REQUIRED" | "BAD_GATEWAY" | "BAD_REQUEST" | "BLUESKY_OAUTH_AUTHORIZATION_FAILED" | "BLUESKY_OAUTH_NOT_ENABLED" | "ACCOUNT_LIMITED" | "ACCOUNT_IDENTITY_LOCKED" | "ACCOUNT_SUSPENDED_PERMANENTLY" | "ACCOUNT_SUSPENDED_TEMPORARILY" | "ACCOUNT_TOO_NEW_FOR_GUILD" | "ACLS_MUST_BE_NON_EMPTY" | "ADMIN_API_KEY_NOT_FOUND" | "ALREADY_FRIENDS" | "BOTS_CANNOT_CREATE_GUILDS" | "BOTS_CANNOT_SEND_FRIEND_REQUESTS" | "BOT_ALREADY_IN_GUILD" | "BOT_IS_PRIVATE" | "BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED" | "BOT_USER_AUTH_SESSION_CREATION_DENIED" | "BOT_USER_GENERATION_FAILED" | "BOT_USER_NOT_FOUND" | "CALL_ALREADY_EXISTS" | "CANNOT_EDIT_OTHER_USER_MESSAGE" | "CANNOT_EXECUTE_ON_DM" | "CANNOT_BLOCK_SYSTEM_USER" | "CANNOT_MODIFY_SYSTEM_WEBHOOK" | "CANNOT_REDEEM_PLUTONIUM_WITH_VISIONARY" | "CANNOT_REPORT_GUILD" | "CANNOT_REPORT_OWN_GUILD" | "CANNOT_REPORT_OWN_MESSAGE" | "CANNOT_REPORT_YOURSELF" | "CANNOT_SEND_EMPTY_MESSAGE" | "CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER" | "CANNOT_SEND_FRIEND_REQUEST_TO_SELF" | "CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL" | "CANNOT_SEND_MESSAGES_TO_USER" | "CANNOT_TRANSFER_OWNERSHIP_TO_BOT" | "CAPTCHA_REQUIRED" | "CHANNEL_ALREADY_FOLLOWED" | "CHANNEL_HAS_FOLLOWED_CHANNELS" | "CHANNEL_HAS_THREADS" | "CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED" | "COMMUNICATION_DISABLED" | "CONNECTION_ALREADY_EXISTS" | "CONNECTION_INITIATION_TOKEN_INVALID" | "CONNECTION_INVALID_TYPE" | "CONNECTION_LIMIT_REACHED" | "CONNECTION_NOT_FOUND" | "CONNECTION_VERIFICATION_FAILED" | "CONFLICT" | "CONTENT_BLOCKED" | "DELETION_FAILED" | "DISCOVERY_ALREADY_APPLIED" | "DISCOVERY_APPLICATION_ALREADY_REVIEWED" | "DISCOVERY_APPLICATION_NOT_FOUND" | "DISCOVERY_DISABLED" | "DISCOVERY_INSUFFICIENT_MEMBERS" | "DISCOVERY_NOT_DISCOVERABLE" | "DISCRIMINATOR_REQUIRED" | "EMAIL_SERVICE_NOT_TESTABLE" | "EMAIL_UNAVAILABLE_ON_INSTANCE" | "EMAIL_VERIFICATION_REQUIRED" | "DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED" | "ENFORCEMENT_ACCOUNT_CLOSED" | "ENFORCEMENT_DECISION_ENDED" | "ENFORCEMENT_DECISION_OWNS_STATE" | "ENFORCEMENT_DECISION_REPLACED" | "ENFORCEMENT_DELETION_STARTED" | "FOLLOW_TARGET_CONTENT_WARNING_REQUIRED" | "FOLLOW_TARGET_NOT_AGE_RESTRICTED" | "FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED" | "GUILD_CREATION_EMAIL_VERIFICATION_REQUIRED" | "GUILD_CREATION_PERMISSION_REQUIRED" | "GUILD_EMAIL_VERIFICATION_REQUIRED" | "INVALID_FOLLOW_TARGET_CHANNEL" | "MESSAGE_ALREADY_CROSSPOSTED" | "MESSAGE_CROSSPOST_RATE_LIMITED" | "MESSAGE_NOT_CROSSPOSTABLE" | "MFA_EMAIL_VERIFICATION_REQUIRED" | "PROFILE_EMAIL_VERIFICATION_REQUIRED" | "PUBLISHED_MESSAGE_EDIT_RATE_LIMITED" | "PURCHASE_EMAIL_VERIFICATION_REQUIRED" | "REACTION_EMAIL_VERIFICATION_REQUIRED" | "REPORT_EMAIL_VERIFICATION_REQUIRED" | "REGISTRATION_CLOSED" | "REGISTRATION_CREDENTIALS_REQUIRED" | "REGISTRATION_PENDING_APPROVAL" | "REGISTRATION_REJECTED" | "REGISTRATION_URL_INVALID" | "EXPLICIT_CONTENT_CANNOT_BE_SENT" | "FEATURE_NOT_AVAILABLE_SELF_HOSTED" | "FEATURE_TEMPORARILY_DISABLED" | "FILE_SIZE_TOO_LARGE" | "FORBIDDEN" | "FORUM_TAG_NAMES_MUST_BE_UNIQUE" | "FORUM_TAG_REQUIRED" | "FRIEND_REQUEST_BLOCKED" | "GATEWAY_TIMEOUT" | "GENERAL_ERROR" | "GONE" | "GIFT_CODE_ALREADY_REDEEMED" | "GUILD_TEMPLATE_INVALID" | "GUILD_VERIFICATION_REQUIRED" | "HANDOFF_CODE_EXPIRED" | "HARVEST_EXPIRED" | "HARVEST_FAILED" | "HARVEST_NOT_READY" | "HIDE_MEDIA_DOWNLOAD_OPTION_MEDIA_ONLY" | "INTERNAL_SERVER_ERROR" | "INVALID_ACLS_FORMAT" | "INVALID_API_ORIGIN" | "INVALID_AUTH_TOKEN" | "INVALID_BOT_FLAG" | "INVALID_CAPTCHA" | "INVALID_CHANNEL_TYPE_FOR_CALL" | "INVALID_CHANNEL_TYPE" | "INVALID_DSA_REPORT_TARGET" | "INVALID_DSA_TICKET" | "INVALID_DSA_VERIFICATION_CODE" | "INVALID_FLAGS_FORMAT" | "INVALID_FORM_BODY" | "INVALID_HANDOFF_CODE" | "INVALID_ORIGIN_HANDOFF_NONCE" | "INVALID_PASSKEY_BRIDGE_NONCE" | "INVALID_PERMISSIONS_INTEGER" | "INVALID_PERMISSIONS_NEGATIVE" | "INVALID_REPORT_FLOW_ANSWERS" | "INVALID_REQUEST" | "INVALID_STREAM_KEY_FORMAT" | "INVALID_STREAM_THUMBNAIL_PAYLOAD" | "INVALID_SYSTEM_FLAG" | "INVALID_TIMESTAMP" | "INVALID_TOKEN" | "INVALID_THREAD_NOTIFICATION_SETTINGS" | "INVALID_WEBAUTHN_AUTHENTICATION_COUNTER" | "INVALID_WEBAUTHN_CREDENTIAL_COUNTER" | "INVALID_WEBAUTHN_CREDENTIAL" | "INVALID_WEBAUTHN_PUBLIC_KEY_FORMAT" | "INVITES_DISABLED" | "IP_AUTHORIZATION_REQUIRED" | "IP_AUTHORIZATION_RESEND_COOLDOWN" | "IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED" | "GLOBAL_IP_BANNED" | "GLOBAL_IP_TEMPORARILY_BANNED" | "IP_BAN_DECLINED" | "IP_BAN_LINKED_TO_DECISION" | "MAX_APPLICATIONS" | "MAX_BOOKMARKS" | "MAX_ACTIVE_THREADS" | "MAX_CATEGORY_CHANNELS" | "MAX_EMOJIS" | "MAX_FAVORITE_MEMES" | "MAX_FRIENDS" | "MAX_FORUM_TAGS" | "MAX_GROUP_DM_RECIPIENTS" | "MAX_GROUP_DMS" | "GROUP_DM_RECIPIENTS_NOT_ADDABLE" | "GROUP_DM_MATURE_CONTENT_INELIGIBLE" | "MAX_GUILD_CHANNELS" | "MAX_GUILD_MEMBERS" | "MAX_GUILD_ROLES" | "MAX_GUILDS" | "MAX_PINNED_THREADS_IN_FORUM" | "MAX_INVITES" | "MAX_REACTIONS" | "MAX_STICKERS" | "MAX_THREAD_MEMBERS" | "MAX_WEBHOOKS_PER_CHANNEL" | "MAX_WEBHOOKS_PER_GUILD" | "MEDIA_METADATA_ERROR" | "METHOD_NOT_ALLOWED" | "MISSING_ACCESS" | "MISSING_ACL" | "MISSING_AUTHORIZATION" | "MISSING_OAUTH_SCOPE" | "MISSING_PERMISSIONS" | "NO_ACTIVE_CALL" | "NO_ACTIVE_SUBSCRIPTION" | "NO_TAGS_AVAILABLE_TO_NON_MODERATORS" | "NOT_FOUND" | "NOT_IMPLEMENTED" | "NO_PASSKEYS_REGISTERED" | "NO_PENDING_DELETION" | "NO_USERS_WITH_FLUXERTAG_EXIST" | "NOT_A_BOT_APPLICATION" | "NOT_FRIENDS_WITH_USER" | "NSFW_CONTENT_AGE_RESTRICTED" | "PASSKEY_AUTHENTICATION_FAILED" | "PREMIUM_PURCHASE_BLOCKED" | "PREVIEW_MUST_BE_JPEG" | "PROCESSING_FAILED" | "RATE_LIMITED" | "REPORT_ALREADY_RESOLVED" | "REPORT_BANNED" | "REPORT_FLOW_OUTDATED" | "REPORT_UNDER_LEGAL_HOLD" | "RESPONSE_VALIDATION_ERROR" | "RESOURCE_LOCKED" | "SERVICE_UNAVAILABLE" | "SESSION_TOKEN_MISMATCH" | "SINGLE_COMMUNITY_CANNOT_CREATE_GUILDS" | "SINGLE_COMMUNITY_CANNOT_DELETE" | "SINGLE_COMMUNITY_CANNOT_LEAVE" | "INSTANCE_POLICY_TRANSITION_NOT_ALLOWED" | "SLOWMODE_RATE_LIMITED" | "SEARCH_INDEX_NOT_READY" | "SSO_REQUIRED" | "STORE_BILLING_UNAVAILABLE" | "STORE_NOTIFICATION_UNAUTHORIZED" | "STORE_PURCHASE_INVALID" | "STORE_PURCHASE_OWNED_BY_OTHER_ACCOUNT" | "STORE_PURCHASE_SANDBOX_NOT_ENTITLED" | "STREAM_KEY_CHANNEL_MISMATCH" | "STREAM_KEY_SCOPE_MISMATCH" | "STRIPE_ERROR" | "STRIPE_GIFT_REDEMPTION_IN_PROGRESS" | "STRIPE_INVALID_PRODUCT" | "STRIPE_INVALID_PRODUCT_CONFIGURATION" | "STRIPE_NO_ACTIVE_SUBSCRIPTION" | "STRIPE_NO_PURCHASE_HISTORY" | "STRIPE_REFUND_OUTSIDE_WINDOW" | "STRIPE_REFUND_COOLDOWN_ACTIVE" | "STRIPE_NO_SUBSCRIPTION" | "STRIPE_PAYMENT_NOT_AVAILABLE" | "STRIPE_SUBSCRIPTION_ALREADY_CANCELING" | "STRIPE_SUBSCRIPTION_NOT_CANCELING" | "STRIPE_WEBHOOK_NOT_AVAILABLE" | "STRIPE_WEBHOOK_SIGNATURE_INVALID" | "STRIPE_WEBHOOK_SIGNATURE_MISSING" | "DIRECT_MESSAGES_DISABLED" | "NEW_CONVERSATIONS_LIMITED" | "DONATION_AMOUNT_INVALID" | "DONATION_MAGIC_LINK_EXPIRED" | "DONATION_MAGIC_LINK_INVALID" | "DONATION_MAGIC_LINK_USED" | "SUDO_MODE_REQUIRED" | "TAG_ALREADY_TAKEN" | "TEMPORARY_INVITE_REQUIRES_PRESENCE" | "TEST_HARNESS_DISABLED" | "TEST_HARNESS_FORBIDDEN" | "THREAD_ALREADY_CREATED_FOR_MESSAGE" | "THREAD_ARCHIVED" | "THREAD_LOCKED" | "TWO_FA_NOT_ENABLED" | "TWO_FACTOR_REQUIRED" | "UNAUTHORIZED" | "UNCLAIMED_ACCOUNT_CANNOT_ACCEPT_FRIEND_REQUESTS" | "UNCLAIMED_ACCOUNT_CANNOT_ADD_REACTIONS" | "UNCLAIMED_ACCOUNT_CANNOT_CREATE_APPLICATIONS" | "UNCLAIMED_ACCOUNT_CANNOT_CREATE_GUILDS" | "UNCLAIMED_ACCOUNT_CANNOT_JOIN_GROUP_DMS" | "UNCLAIMED_ACCOUNT_CANNOT_JOIN_ONE_ON_ONE_VOICE_CALLS" | "UNCLAIMED_ACCOUNT_CANNOT_JOIN_VOICE_CHANNELS" | "UNCLAIMED_ACCOUNT_CANNOT_MAKE_PURCHASES" | "UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES" | "UNCLAIMED_ACCOUNT_CANNOT_SEND_FRIEND_REQUESTS" | "UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES" | "UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS" | "UNKNOWN_CHANNEL" | "UNKNOWN_EMOJI" | "UNKNOWN_ENFORCEMENT_DECISION" | "UNKNOWN_FAVORITE_MEME" | "UNKNOWN_FORUM_TAG" | "UNKNOWN_GIFT_CODE" | "UNKNOWN_GUILD" | "UNKNOWN_HARVEST" | "UNKNOWN_INVITE" | "UNKNOWN_MEMBER" | "UNKNOWN_MESSAGE" | "UNKNOWN_ORIGIN_HANDOFF" | "UNKNOWN_PASSKEY_BRIDGE" | "UNKNOWN_PASSKEY_MIGRATION" | "UNKNOWN_REPORT" | "UNKNOWN_ROLE" | "UNKNOWN_STICKER" | "UNKNOWN_STORE_PURCHASE" | "UNKNOWN_THREAD_MEMBER" | "UNKNOWN_USER_FLAG" | "UNKNOWN_USER" | "UNKNOWN_VOICE_REGION" | "UNKNOWN_VOICE_SERVER" | "UNKNOWN_WEBAUTHN_CREDENTIAL" | "UNKNOWN_APPLICATION" | "UNKNOWN_WEBHOOK" | "WEBHOOK_FORUM_TARGET_CONFLICT" | "WEBHOOK_FORUM_TARGET_REQUIRED" | "WEBHOOK_SERVICE_FORUM_UNSUPPORTED" | "WEBHOOK_THREAD_NAME_REQUIRES_FORUM" | "USERNAME_NOT_AVAILABLE" | "USERNAME_SIGN_IN_ONLY" | "UPDATE_FAILED" | "USER_BANNED_FROM_GUILD" | "USER_IP_BANNED_FROM_GUILD" | "USER_NOT_IN_VOICE" | "USER_OWNS_GUILDS" | "VALIDATION_ERROR" | "VOICE_CHANNEL_FULL" | "WEBAUTHN_CREDENTIAL_LIMIT_REACHED" | "AGE_VERIFICATION_ALREADY_VERIFIED";
     };
     responses: never;
     parameters: never;
@@ -13425,7 +14967,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AuthLoginResponse"];
+                    "application/json": components["schemas"]["AuthTokenWithUserIdResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
@@ -13535,6 +15077,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoffCompleteResponse"] | null;
+                };
+            };
             /** @description No Content */
             204: {
                 headers: {
@@ -13586,7 +15137,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["HandoffInitiateRequest"];
+            };
+        };
         responses: {
             /** @description Success */
             200: {
@@ -13649,6 +15204,62 @@ export interface operations {
                 "application/json": components["schemas"]["HandoffCancelRequest"];
             };
         };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deny_handoff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The handoff code */
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description No Content */
             204: {
@@ -14729,6 +16340,65 @@ export interface operations {
             };
         };
     };
+    recover_account: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoverAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoverAccountResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     register_account: {
         parameters: {
             query?: never;
@@ -15187,6 +16857,64 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SsoStatusResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    get_username_availability: {
+        parameters: {
+            query: {
+                /** @description Username to check (1-32 characters) */
+                username: components["schemas"]["UsernameType"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsernameAvailabilityResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
@@ -18454,6 +20182,88 @@ export interface operations {
             };
         };
     };
+    start_thread_from_message: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+                /** @description The ID of the message */
+                message_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartThreadFromMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadChannelResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     set_channel_permission_overwrite: {
         parameters: {
             query?: never;
@@ -18836,6 +20646,86 @@ export interface operations {
             };
         };
     };
+    get_channel_post_data: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ThreadPostDataRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadPostDataResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     add_group_dm_recipient: {
         parameters: {
             query?: never;
@@ -19149,7 +21039,330 @@ export interface operations {
             };
         };
     };
-    indicate_typing: {
+    create_forum_tag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForumTagRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    update_forum_tag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+                /** @description The ID of the forum tag */
+                tag_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForumTagRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    delete_forum_tag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+                /** @description The ID of the forum tag */
+                tag_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    list_thread_members: {
+        parameters: {
+            query?: {
+                /** @description Whether to include a guild member object for each thread member */
+                with_member?: string;
+                /** @description Get thread members after this user ID */
+                after?: components["schemas"]["SnowflakeType"];
+                /** @description Max number of thread members to return (1-100, default 100) */
+                limit?: string;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadMemberListResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    join_thread: {
         parameters: {
             query?: never;
             header?: never;
@@ -19167,6 +21380,913 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    leave_thread: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    update_thread_member_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ThreadMemberSettingsRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadMemberResponse"] | null;
+                };
+            };
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    get_thread_member: {
+        parameters: {
+            query?: {
+                /** @description Whether to include a guild member object for the thread member */
+                with_member?: string;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+                /** @description The ID of the user */
+                user_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadMemberResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    add_thread_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+                /** @description The ID of the user */
+                user_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    remove_thread_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+                /** @description The ID of the user */
+                user_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    start_thread: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartThreadRequestBody"];
+                "multipart/form-data": components["schemas"]["StartThreadMultipartRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartForumThreadResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    list_private_archived_threads: {
+        parameters: {
+            query?: {
+                /** @description Get threads archived before this timestamp */
+                before?: string;
+                /** @description Max number of threads to return (2-100, default 50) */
+                limit?: string;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchivedThreadsResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    list_public_archived_threads: {
+        parameters: {
+            query?: {
+                /** @description Get threads archived before this timestamp */
+                before?: string;
+                /** @description Max number of threads to return (2-100, default 50) */
+                limit?: string;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchivedThreadsResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    search_threads: {
+        parameters: {
+            query?: {
+                /** @description Text to look for in thread names (max 100 characters) */
+                name?: string;
+                /** @description Accepted for compatibility and ignored (max 100, default 2) */
+                slop?: string;
+                /** @description Tag IDs to filter by (max 20) */
+                tag?: components["schemas"]["SnowflakeType"][];
+                /** @description How posts are filtered when searching by several tags */
+                tag_setting?: components["schemas"]["ForumTagSettingSchema"];
+                /** @description Whether to return only archived or only active threads (default both) */
+                archived?: string;
+                /** @description The sorting algorithm to use */
+                sort_by?: components["schemas"]["ThreadSearchSortBySchema"];
+                /** @description The direction to sort */
+                sort_order?: components["schemas"]["ThreadSearchSortOrderSchema"];
+                /** @description Max number of threads to return (1-25, default 25) */
+                limit?: string;
+                /** @description Number of threads to skip (max 9975) */
+                offset?: string;
+                /** @description Get threads before this thread ID */
+                max_id?: components["schemas"]["SnowflakeType"];
+                /** @description Get threads after this thread ID */
+                min_id?: components["schemas"]["SnowflakeType"];
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadSearchResult"];
+                };
+            };
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchIndexNotReadyResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    indicate_typing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    list_joined_private_archived_threads: {
+        parameters: {
+            query?: {
+                /** @description Get threads before this thread ID */
+                before?: components["schemas"]["SnowflakeType"];
+                /** @description Max number of threads to return (2-100, default 50) */
+                limit?: string;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchivedThreadsResponse"];
+                };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
             400: {
@@ -19483,6 +22603,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DiscoveryGuildListResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    get_discovery_channel_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the guild */
+                guild_id: components["schemas"]["SnowflakeType"];
+                /** @description The ID of the channel */
+                channel_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscoveryChannelPreviewResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
@@ -24101,6 +27299,82 @@ export interface operations {
             };
         };
     };
+    list_guild_active_threads: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the guild */
+                guild_id: components["schemas"]["SnowflakeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActiveThreadsResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     transfer_guild_ownership: {
         parameters: {
             query?: never;
@@ -24415,7 +27689,10 @@ export interface operations {
     };
     download_data_harvest_archive: {
         parameters: {
-            query?: never;
+            query: {
+                /** @description The signed download token from the harvest download URL */
+                token: string;
+            };
             header?: never;
             path: {
                 /** @description The ID of the harvest request */
@@ -24441,6 +27718,65 @@ export interface operations {
                 };
                 content: {
                     "application/zip": components["schemas"]["HarvestArchiveResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    set_instance_account_identity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InstanceAccountIdentityUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstanceAccountIdentityResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
@@ -27975,7 +31311,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["DsaReportRequest"];
+                "application/json": components["schemas"]["DsaReportFlowRequest"];
             };
         };
         responses: {
@@ -28082,6 +31418,15 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description Service Unavailable - The request could not be completed right now */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
         };
     };
     verify_dsa_report_email: {
@@ -28143,7 +31488,7 @@ export interface operations {
             };
         };
     };
-    report_guild: {
+    submit_message_report_flow: {
         parameters: {
             query?: never;
             header?: never;
@@ -28152,7 +31497,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ReportGuildRequest"];
+                "application/json": components["schemas"]["ReportFlowMessageSubmissionRequest"];
             };
         };
         responses: {
@@ -28220,7 +31565,7 @@ export interface operations {
             };
         };
     };
-    report_message: {
+    submit_user_report_flow: {
         parameters: {
             query?: never;
             header?: never;
@@ -28229,7 +31574,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ReportMessageRequest"];
+                "application/json": components["schemas"]["ReportFlowUserSubmissionRequest"];
             };
         };
         responses: {
@@ -28297,18 +31642,22 @@ export interface operations {
             };
         };
     };
-    report_user: {
+    get_report_flow: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Where the flow is shown */
+                surface?: components["schemas"]["ReportFlowSurface"];
+                /** @description Language tag of the client UI. The server picks the closest supported locale and reports it in the locale field */
+                locale?: string;
+            };
             header?: never;
-            path?: never;
+            path: {
+                /** @description Kind of entity a report flow is about */
+                target_type: components["schemas"]["ReportFlowTargetType"];
+            };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReportUserRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Success */
             200: {
@@ -28316,29 +31665,11 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReportResponse"];
+                    "application/json": components["schemas"]["ReportFlowResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
             400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized - Authentication is required or the token is invalid */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Forbidden - You do not have permission to perform this action */
-            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -29143,142 +32474,6 @@ export interface operations {
             };
         };
     };
-    create_localized_card_preapproval_session: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateCheckoutSessionRequest"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UrlResponse"];
-                };
-            };
-            /** @description Bad Request - The request was malformed or contained invalid data */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized - Authentication is required or the token is invalid */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Forbidden - You do not have permission to perform this action */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too Many Requests - You are being rate limited */
-            429: {
-                headers: {
-                    /** @description Number of seconds to wait before retrying (only on 429) */
-                    "Retry-After"?: number;
-                    /** @description The number of requests that can be made in the current window */
-                    "X-RateLimit-Limit"?: number;
-                    /** @description The number of remaining requests that can be made */
-                    "X-RateLimit-Remaining"?: number;
-                    /** @description Unix timestamp when the rate limit resets */
-                    "X-RateLimit-Reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThrottledError"];
-                };
-            };
-            /** @description Internal Server Error - An unexpected error occurred */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    continue_localized_card_preapproval_session: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LocalizedCardPreapprovalContinueRequest"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LocalizedCardPreapprovalContinueResponse"];
-                };
-            };
-            /** @description Bad Request - The request was malformed or contained invalid data */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too Many Requests - You are being rate limited */
-            429: {
-                headers: {
-                    /** @description Number of seconds to wait before retrying (only on 429) */
-                    "Retry-After"?: number;
-                    /** @description The number of requests that can be made in the current window */
-                    "X-RateLimit-Limit"?: number;
-                    /** @description The number of remaining requests that can be made */
-                    "X-RateLimit-Remaining"?: number;
-                    /** @description Unix timestamp when the rate limit resets */
-                    "X-RateLimit-Reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThrottledError"];
-                };
-            };
-            /** @description Internal Server Error - An unexpected error occurred */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
     process_stripe_webhook: {
         parameters: {
             query?: never;
@@ -29886,7 +33081,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserPrivateResponse"];
+                    "application/json": components["schemas"]["UserUpdateResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
@@ -36026,6 +39221,83 @@ export interface operations {
             };
         };
     };
+    update_current_user_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserPasswordUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserPasswordUpdateResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     complete_password_change: {
         parameters: {
             query?: never;
@@ -36275,233 +39547,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PasswordChangeVerifyResponse"];
-                };
-            };
-            /** @description Bad Request - The request was malformed or contained invalid data */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized - Authentication is required or the token is invalid */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Forbidden - You do not have permission to perform this action */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too Many Requests - You are being rate limited */
-            429: {
-                headers: {
-                    /** @description Number of seconds to wait before retrying (only on 429) */
-                    "Retry-After"?: number;
-                    /** @description The number of requests that can be made in the current window */
-                    "X-RateLimit-Limit"?: number;
-                    /** @description The number of remaining requests that can be made */
-                    "X-RateLimit-Remaining"?: number;
-                    /** @description Unix timestamp when the rate limit resets */
-                    "X-RateLimit-Reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThrottledError"];
-                };
-            };
-            /** @description Internal Server Error - An unexpected error occurred */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    start_inbound_phone_challenge: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InboundSmsChallengeStartResponse"];
-                };
-            };
-            /** @description Bad Request - The request was malformed or contained invalid data */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized - Authentication is required or the token is invalid */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Forbidden - You do not have permission to perform this action */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too Many Requests - You are being rate limited */
-            429: {
-                headers: {
-                    /** @description Number of seconds to wait before retrying (only on 429) */
-                    "Retry-After"?: number;
-                    /** @description The number of requests that can be made in the current window */
-                    "X-RateLimit-Limit"?: number;
-                    /** @description The number of remaining requests that can be made */
-                    "X-RateLimit-Remaining"?: number;
-                    /** @description Unix timestamp when the rate limit resets */
-                    "X-RateLimit-Reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThrottledError"];
-                };
-            };
-            /** @description Internal Server Error - An unexpected error occurred */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    send_phone_verification_code: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PhoneSendVerificationRequest"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PhoneSendVerificationResponse"];
-                };
-            };
-            /** @description Bad Request - The request was malformed or contained invalid data */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized - Authentication is required or the token is invalid */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Forbidden - You do not have permission to perform this action */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too Many Requests - You are being rate limited */
-            429: {
-                headers: {
-                    /** @description Number of seconds to wait before retrying (only on 429) */
-                    "Retry-After"?: number;
-                    /** @description The number of requests that can be made in the current window */
-                    "X-RateLimit-Limit"?: number;
-                    /** @description The number of remaining requests that can be made */
-                    "X-RateLimit-Remaining"?: number;
-                    /** @description Unix timestamp when the rate limit resets */
-                    "X-RateLimit-Reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThrottledError"];
-                };
-            };
-            /** @description Internal Server Error - An unexpected error occurred */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    verify_phone_code: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PhoneVerifyRequest"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PhoneVerifyResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
@@ -36953,6 +39998,156 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    get_recovery_kit_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryKitStatusResponse"];
+                };
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    create_recovery_kit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SudoVerificationSchema"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryKitCreateResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
@@ -37494,156 +40689,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RelationshipResponse"];
-                };
-            };
-            /** @description Bad Request - The request was malformed or contained invalid data */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized - Authentication is required or the token is invalid */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Forbidden - You do not have permission to perform this action */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too Many Requests - You are being rate limited */
-            429: {
-                headers: {
-                    /** @description Number of seconds to wait before retrying (only on 429) */
-                    "Retry-After"?: number;
-                    /** @description The number of requests that can be made in the current window */
-                    "X-RateLimit-Limit"?: number;
-                    /** @description The number of remaining requests that can be made */
-                    "X-RateLimit-Remaining"?: number;
-                    /** @description Unix timestamp when the rate limit resets */
-                    "X-RateLimit-Reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThrottledError"];
-                };
-            };
-            /** @description Internal Server Error - An unexpected error occurred */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    get_phone_gate_escape: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PhoneGateEscapePreviewResponse"];
-                };
-            };
-            /** @description Bad Request - The request was malformed or contained invalid data */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized - Authentication is required or the token is invalid */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Forbidden - You do not have permission to perform this action */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too Many Requests - You are being rate limited */
-            429: {
-                headers: {
-                    /** @description Number of seconds to wait before retrying (only on 429) */
-                    "Retry-After"?: number;
-                    /** @description The number of requests that can be made in the current window */
-                    "X-RateLimit-Limit"?: number;
-                    /** @description The number of remaining requests that can be made */
-                    "X-RateLimit-Remaining"?: number;
-                    /** @description Unix timestamp when the rate limit resets */
-                    "X-RateLimit-Reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThrottledError"];
-                };
-            };
-            /** @description Internal Server Error - An unexpected error occurred */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    execute_phone_gate_escape: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["EmptyBodyRequest"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserPrivateResponse"];
                 };
             };
             /** @description Bad Request - The request was malformed or contained invalid data */
@@ -38770,6 +41815,81 @@ export interface operations {
             };
         };
     };
+    create_voice_p2p_connection_reports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoiceP2pConnectionReportsRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unauthorized - Authentication is required or the token is invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Forbidden - You do not have permission to perform this action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     get_webhook: {
         parameters: {
             query?: never;
@@ -39065,6 +42185,7 @@ export interface operations {
             query?: {
                 /** @description Whether to wait for the webhook response */
                 wait?: string;
+                thread_id?: string | null;
             };
             header?: never;
             path: {
@@ -39252,7 +42373,9 @@ export interface operations {
     };
     execute_github_webhook: {
         parameters: {
-            query?: never;
+            query?: {
+                thread_id?: string | null;
+            };
             header?: never;
             path: {
                 /** @description The ID of the webhook */
@@ -39374,9 +42497,75 @@ export interface operations {
             };
         };
     };
+    execute_libredesk_webhook: {
+        parameters: {
+            query?: {
+                thread_id?: string | null;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the webhook */
+                webhook_id: components["schemas"]["SnowflakeType"];
+                /** @description The webhook token */
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LibredeskWebhook"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request - The request was malformed or contained invalid data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too Many Requests - You are being rate limited */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before retrying (only on 429) */
+                    "Retry-After"?: number;
+                    /** @description The number of requests that can be made in the current window */
+                    "X-RateLimit-Limit"?: number;
+                    /** @description The number of remaining requests that can be made */
+                    "X-RateLimit-Remaining"?: number;
+                    /** @description Unix timestamp when the rate limit resets */
+                    "X-RateLimit-Reset"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThrottledError"];
+                };
+            };
+            /** @description Internal Server Error - An unexpected error occurred */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     get_webhook_message: {
         parameters: {
-            query?: never;
+            query?: {
+                thread_id?: string | null;
+            };
             header?: never;
             path: {
                 /** @description The ID of the webhook */
@@ -39438,7 +42627,9 @@ export interface operations {
     };
     delete_webhook_message: {
         parameters: {
-            query?: never;
+            query?: {
+                thread_id?: string | null;
+            };
             header?: never;
             path: {
                 /** @description The ID of the webhook */
@@ -39498,7 +42689,9 @@ export interface operations {
     };
     edit_webhook_message: {
         parameters: {
-            query?: never;
+            query?: {
+                thread_id?: string | null;
+            };
             header?: never;
             path: {
                 /** @description The ID of the webhook */
@@ -39564,7 +42757,9 @@ export interface operations {
     };
     execute_slack_webhook: {
         parameters: {
-            query?: never;
+            query?: {
+                thread_id?: string | null;
+            };
             header?: never;
             path: {
                 /** @description The ID of the webhook */
