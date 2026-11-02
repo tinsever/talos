@@ -12,6 +12,12 @@ export const routes = {
   "POST /auth/authorize-ip": {
     "authenticated": false
   },
+  "POST /auth/email-code/send": {
+    "authenticated": false
+  },
+  "POST /auth/email-code/verify": {
+    "authenticated": false
+  },
   "POST /auth/email-revert": {
     "authenticated": false
   },
@@ -27,6 +33,9 @@ export const routes = {
   "DELETE /auth/handoff/{code}": {
     "authenticated": false
   },
+  "POST /auth/handoff/{code}/deny": {
+    "authenticated": false
+  },
   "GET /auth/handoff/{code}/info": {
     "authenticated": false
   },
@@ -34,6 +43,9 @@ export const routes = {
     "authenticated": false
   },
   "POST /auth/handoff/{code}/status": {
+    "authenticated": false
+  },
+  "POST /auth/identify": {
     "authenticated": false
   },
   "GET /auth/ip-authorization/poll": {
@@ -78,7 +90,19 @@ export const routes = {
   "POST /auth/passkey-bridge/{ceremony_id}/redeem": {
     "authenticated": false
   },
+  "POST /auth/recover": {
+    "authenticated": false
+  },
   "POST /auth/register": {
+    "authenticated": false
+  },
+  "POST /auth/register/handoff": {
+    "authenticated": false
+  },
+  "GET /auth/register/handoff/challenge": {
+    "authenticated": false
+  },
+  "POST /auth/register/handoff/redeem": {
     "authenticated": false
   },
   "POST /auth/reset": {
@@ -93,6 +117,9 @@ export const routes = {
   "POST /auth/sessions/logout": {
     "authenticated": true
   },
+  "POST /auth/sign-in-link": {
+    "authenticated": false
+  },
   "POST /auth/sso/complete": {
     "authenticated": false
   },
@@ -100,6 +127,9 @@ export const routes = {
     "authenticated": false
   },
   "GET /auth/sso/status": {
+    "authenticated": false
+  },
+  "GET /auth/username-availability": {
     "authenticated": false
   },
   "POST /auth/username-suggestions": {
@@ -228,6 +258,9 @@ export const routes = {
   "DELETE /channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{target_id}": {
     "authenticated": true
   },
+  "POST /channels/{channel_id}/messages/{message_id}/threads": {
+    "authenticated": true
+  },
   "PUT /channels/{channel_id}/permissions/{overwrite_id}": {
     "authenticated": true
   },
@@ -243,6 +276,9 @@ export const routes = {
   "DELETE /channels/{channel_id}/pins/{message_id}": {
     "authenticated": true
   },
+  "POST /channels/{channel_id}/post-data": {
+    "authenticated": true
+  },
   "PUT /channels/{channel_id}/recipients/{user_id}": {
     "authenticated": true
   },
@@ -255,7 +291,52 @@ export const routes = {
   "GET /channels/{channel_id}/slowmode": {
     "authenticated": true
   },
+  "POST /channels/{channel_id}/tags": {
+    "authenticated": true
+  },
+  "PUT /channels/{channel_id}/tags/{tag_id}": {
+    "authenticated": true
+  },
+  "DELETE /channels/{channel_id}/tags/{tag_id}": {
+    "authenticated": true
+  },
+  "GET /channels/{channel_id}/thread-members": {
+    "authenticated": true
+  },
+  "PUT /channels/{channel_id}/thread-members/@me": {
+    "authenticated": true
+  },
+  "DELETE /channels/{channel_id}/thread-members/@me": {
+    "authenticated": true
+  },
+  "PATCH /channels/{channel_id}/thread-members/@me/settings": {
+    "authenticated": true
+  },
+  "GET /channels/{channel_id}/thread-members/{user_id}": {
+    "authenticated": true
+  },
+  "PUT /channels/{channel_id}/thread-members/{user_id}": {
+    "authenticated": true
+  },
+  "DELETE /channels/{channel_id}/thread-members/{user_id}": {
+    "authenticated": true
+  },
+  "POST /channels/{channel_id}/threads": {
+    "authenticated": true
+  },
+  "GET /channels/{channel_id}/threads/archived/private": {
+    "authenticated": true
+  },
+  "GET /channels/{channel_id}/threads/archived/public": {
+    "authenticated": true
+  },
+  "GET /channels/{channel_id}/threads/search": {
+    "authenticated": true
+  },
   "POST /channels/{channel_id}/typing": {
+    "authenticated": true
+  },
+  "GET /channels/{channel_id}/users/@me/threads/archived/private": {
     "authenticated": true
   },
   "GET /channels/{channel_id}/webhooks": {
@@ -270,7 +351,13 @@ export const routes = {
   "GET /discovery/guilds": {
     "authenticated": true
   },
+  "GET /discovery/guilds/{guild_id}/channels/{channel_id}": {
+    "authenticated": true
+  },
   "POST /discovery/guilds/{guild_id}/join": {
+    "authenticated": true
+  },
+  "POST /discovery/guilds/{guild_id}/visit": {
     "authenticated": true
   },
   "POST /donations/checkout": {
@@ -450,6 +537,9 @@ export const routes = {
   "DELETE /guilds/{guild_id}/stickers/{sticker_id}": {
     "authenticated": true
   },
+  "GET /guilds/{guild_id}/threads/active": {
+    "authenticated": true
+  },
   "POST /guilds/{guild_id}/transfer-ownership": {
     "authenticated": true
   },
@@ -465,6 +555,15 @@ export const routes = {
   "GET /harvest-downloads/{harvestId}": {
     "authenticated": false
   },
+  "GET /instance/badges": {
+    "authenticated": false
+  },
+  "PUT /instance/setup/account-identity": {
+    "authenticated": false
+  },
+  "POST /instance/setup/token-checks": {
+    "authenticated": false
+  },
   "GET /invites/{invite_code}": {
     "authenticated": false
   },
@@ -472,6 +571,9 @@ export const routes = {
     "authenticated": true
   },
   "DELETE /invites/{invite_code}": {
+    "authenticated": true
+  },
+  "POST /invites/{invite_code}/visit": {
     "authenticated": true
   },
   "GET /ip": {
@@ -546,6 +648,69 @@ export const routes = {
   "GET /oauth2/userinfo": {
     "authenticated": true
   },
+  "POST /operator-pass/checkout": {
+    "authenticated": true
+  },
+  "GET /operator-pass/listing": {
+    "authenticated": true
+  },
+  "PUT /operator-pass/listing": {
+    "authenticated": true
+  },
+  "GET /operator-pass/offers/{offer_id}": {
+    "authenticated": true
+  },
+  "DELETE /operator-pass/offers/{offer_id}": {
+    "authenticated": true
+  },
+  "POST /operator-pass/offers/{offer_id}/accept": {
+    "authenticated": true
+  },
+  "POST /operator-pass/offers/{offer_id}/decline": {
+    "authenticated": true
+  },
+  "GET /operator-pass/passes": {
+    "authenticated": true
+  },
+  "POST /operator-pass/passes/{pass_id}/offers": {
+    "authenticated": true
+  },
+  "POST /operator-pass/passes/{pass_id}/withdraw": {
+    "authenticated": true
+  },
+  "GET /operator-pass/purchases": {
+    "authenticated": true
+  },
+  "POST /operator-pass/purchases/{purchase_id}/withdraw": {
+    "authenticated": true
+  },
+  "GET /operator-pass/releases/latest": {
+    "authenticated": false
+  },
+  "GET /operator-pass/state": {
+    "authenticated": false
+  },
+  "POST /operator-pass/waitlist": {
+    "authenticated": false
+  },
+  "GET /operator-pass/waitlist/challenge": {
+    "authenticated": false
+  },
+  "POST /operator-pass/waitlist/confirm": {
+    "authenticated": false
+  },
+  "POST /operator-pass/waitlist/followup": {
+    "authenticated": false
+  },
+  "GET /operator-pass/waitlist/unsubscribe": {
+    "authenticated": false
+  },
+  "POST /operator-pass/waitlist/unsubscribe": {
+    "authenticated": false
+  },
+  "GET /operator-pass/wall": {
+    "authenticated": false
+  },
   "POST /premium/cancel-pending-subscription-change": {
     "authenticated": true
   },
@@ -618,17 +783,20 @@ export const routes = {
   "POST /reports/dsa/email/verify": {
     "authenticated": false
   },
-  "POST /reports/guild": {
+  "POST /reports/flows/message/submissions": {
     "authenticated": true
   },
-  "POST /reports/message": {
+  "POST /reports/flows/user/submissions": {
     "authenticated": true
   },
-  "POST /reports/user": {
-    "authenticated": true
+  "GET /reports/flows/{target_type}": {
+    "authenticated": false
   },
   "POST /search/messages": {
     "authenticated": true
+  },
+  "GET /signed-downloads/{filename}": {
+    "authenticated": false
   },
   "GET /stickers/{sticker_id}/metadata": {
     "authenticated": true
@@ -657,12 +825,6 @@ export const routes = {
   "POST /stripe/checkout/subscription": {
     "authenticated": true
   },
-  "POST /stripe/checkout/subscription/preapproval": {
-    "authenticated": true
-  },
-  "POST /stripe/checkout/subscription/preapproval/continue": {
-    "authenticated": false
-  },
   "POST /stripe/webhook": {
     "authenticated": false
   },
@@ -690,9 +852,6 @@ export const routes = {
   "PATCH /users/@me": {
     "authenticated": true
   },
-  "POST /users/@me/age-verification": {
-    "authenticated": true
-  },
   "GET /users/@me/applications": {
     "authenticated": true
   },
@@ -714,6 +873,9 @@ export const routes = {
   "DELETE /users/@me/channels/{channel_id}/pin": {
     "authenticated": true
   },
+  "POST /users/@me/claim": {
+    "authenticated": true
+  },
   "GET /users/@me/connections": {
     "authenticated": true
   },
@@ -733,6 +895,9 @@ export const routes = {
     "authenticated": true
   },
   "DELETE /users/@me/connections/{type}/{connection_id}": {
+    "authenticated": true
+  },
+  "PUT /users/@me/date-of-birth": {
     "authenticated": true
   },
   "POST /users/@me/delete": {
@@ -771,6 +936,12 @@ export const routes = {
   "POST /users/@me/email-change/verify-original": {
     "authenticated": true
   },
+  "POST /users/@me/email-verification/confirm": {
+    "authenticated": true
+  },
+  "POST /users/@me/email-verification/send": {
+    "authenticated": true
+  },
   "PUT /users/@me/entrance-sound-selections": {
     "authenticated": true
   },
@@ -790,6 +961,15 @@ export const routes = {
     "authenticated": true
   },
   "GET /users/@me/gifts": {
+    "authenticated": true
+  },
+  "GET /users/@me/guild-visits": {
+    "authenticated": true
+  },
+  "DELETE /users/@me/guild-visits/{guild_id}": {
+    "authenticated": true
+  },
+  "POST /users/@me/guild-visits/{guild_id}/join": {
     "authenticated": true
   },
   "GET /users/@me/guilds": {
@@ -930,6 +1110,9 @@ export const routes = {
   "POST /users/@me/passkey-bridge/{ceremony_id}/redeem": {
     "authenticated": true
   },
+  "POST /users/@me/password": {
+    "authenticated": true
+  },
   "POST /users/@me/password-change/complete": {
     "authenticated": true
   },
@@ -942,19 +1125,13 @@ export const routes = {
   "POST /users/@me/password-change/verify": {
     "authenticated": true
   },
-  "POST /users/@me/phone/inbound-challenge": {
-    "authenticated": true
-  },
-  "POST /users/@me/phone/send-verification": {
-    "authenticated": true
-  },
-  "POST /users/@me/phone/verify": {
-    "authenticated": true
-  },
   "POST /users/@me/preload-messages": {
     "authenticated": true
   },
   "POST /users/@me/premium/reset": {
+    "authenticated": true
+  },
+  "POST /users/@me/profile-badges/preview": {
     "authenticated": true
   },
   "POST /users/@me/push/rotate": {
@@ -967,6 +1144,12 @@ export const routes = {
     "authenticated": true
   },
   "DELETE /users/@me/push/subscriptions/{subscription_id}": {
+    "authenticated": true
+  },
+  "GET /users/@me/recovery-kit": {
+    "authenticated": true
+  },
+  "POST /users/@me/recovery-kit": {
     "authenticated": true
   },
   "GET /users/@me/relationships": {
@@ -990,12 +1173,6 @@ export const routes = {
   "DELETE /users/@me/relationships/{user_id}": {
     "authenticated": true
   },
-  "GET /users/@me/required-actions/phone-gate-escape": {
-    "authenticated": true
-  },
-  "POST /users/@me/required-actions/phone-gate-escape": {
-    "authenticated": true
-  },
   "GET /users/@me/saved-messages": {
     "authenticated": true
   },
@@ -1012,6 +1189,12 @@ export const routes = {
     "authenticated": true
   },
   "PUT /users/@me/settings/voice-activity-sharing": {
+    "authenticated": true
+  },
+  "POST /users/@me/sso/link/start": {
+    "authenticated": true
+  },
+  "POST /users/@me/sudo/email-code": {
     "authenticated": true
   },
   "GET /users/@me/sudo/mfa-methods": {
@@ -1036,6 +1219,24 @@ export const routes = {
     "authenticated": true
   },
   "POST /voice/channels/{channel_id}/entrance-sound": {
+    "authenticated": true
+  },
+  "POST /voice/join": {
+    "authenticated": false
+  },
+  "POST /voice/join/preview": {
+    "authenticated": false
+  },
+  "GET /voice/node": {
+    "authenticated": false
+  },
+  "PATCH /voice/node": {
+    "authenticated": false
+  },
+  "DELETE /voice/node": {
+    "authenticated": false
+  },
+  "POST /voice/p2p/connection-reports": {
     "authenticated": true
   },
   "GET /webhooks/{webhook_id}": {
@@ -1063,6 +1264,9 @@ export const routes = {
     "authenticated": false
   },
   "POST /webhooks/{webhook_id}/{token}/instatus": {
+    "authenticated": false
+  },
+  "POST /webhooks/{webhook_id}/{token}/libredesk": {
     "authenticated": false
   },
   "GET /webhooks/{webhook_id}/{token}/messages/{message_id}": {
