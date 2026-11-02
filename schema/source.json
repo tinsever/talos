@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/fluxerapp/fluxer",
-  "commit": "b375abc20abaa99189c4598183d69c8806ac58ea",
-  "url": "https://raw.githubusercontent.com/fluxerapp/fluxer/b375abc20abaa99189c4598183d69c8806ac58ea/fluxer_api/src/api/openapi/openapi.json",
-  "retrieved": "2026-10-02"
+  "commit": "be8d42c4285ad1e6b2f0f1e4f861e472e10c2ecf",
+  "url": "https://raw.githubusercontent.com/fluxerapp/fluxer/be8d42c4285ad1e6b2f0f1e4f861e472e10c2ecf/fluxer_api/src/api/openapi/openapi.json",
+  "retrieved": "2026-11-02"
 }
